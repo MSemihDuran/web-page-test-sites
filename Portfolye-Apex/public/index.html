@@ -265,6 +265,10 @@
 
     <!-- App Logic Script -->
     <script>
+        const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:5003'
+            : 'https://rootwebcore-backend.onrender.com';
+
         let listings = [];
         let map;
         let markersGroup;
@@ -272,7 +276,7 @@
         // Fetch data from backend api
         async function fetchListings() {
             try {
-                const res = await fetch('/api/apex/listings');
+                const res = await fetch(`${API_BASE}/api/apex/listings`);
                 listings = await res.json();
                 applyFilters();
             } catch (err) {
@@ -454,7 +458,7 @@
             };
 
             try {
-                const res = await fetch('/api/apex/listings', {
+                const res = await fetch(`${API_BASE}/api/apex/listings`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -485,7 +489,7 @@
 
         async function fetchMessages() {
             try {
-                const res = await fetch('/api/apex/messages');
+                const res = await fetch(`${API_BASE}/api/apex/messages`);
                 const messages = await res.json();
                 renderMessages(messages);
             } catch (err) {
@@ -523,7 +527,7 @@
             };
             
             try {
-                const res = await fetch('/api/apex/messages', {
+                const res = await fetch(`${API_BASE}/api/apex/messages`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
