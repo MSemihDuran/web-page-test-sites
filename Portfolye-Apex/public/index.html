@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apex Real Estate Platform</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#0b1329',
+                            card: '#1c2541',
+                            teal: '#48cae4',
+                            blue: '#0077b6',
+                            orange: '#f77f00'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Leaflet.js Maps CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Google Fonts: Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #0b1329;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b1329;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1c2541;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #48cae4;
+        }
+        .glass-panel {
+            background: rgba(28, 37, 65, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(72, 202, 228, 0.15);
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+    <!-- Top Navbar -->
+    <header class="glass-panel sticky top-0 z-40 py-4 px-6 border-b border-brand-teal/10">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-r from-brand-teal to-brand-blue flex items-center justify-center text-white font-black text-xl shadow-lg shadow-brand-teal/20">
+                    A
+                </div>
+                <div>
+                    <h1 class="text-lg font-black tracking-wider text-white">APEX REAL ESTATE</h1>
+                    <span class="text-[9px] uppercase font-bold tracking-widest text-brand-teal">Premium Living Solutions</span>
+                </div>
+            </div>
+
+            <button 
+                onclick="openAddModal()" 
+                class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-teal to-brand-blue hover:opacity-95 transition-all text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-brand-teal/10 active:scale-95"
+            >
+                + Yeni İlan Ekle
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
+        
+        <!-- Filters glass bar -->
+        <div class="glass-panel rounded-3xl p-6 flex flex-col md:flex-row gap-4 items-center justify-between shadow-2xl">
+            <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                <!-- Search -->
+                <div class="relative w-full sm:w-64">
+                    <input 
+                        type="text" 
+                        id="searchQuery" 
+                        oninput="applyFilters()"
+                        placeholder="Şehir veya konum ara..." 
+                        class="w-full py-3 px-4 rounded-2xl bg-brand-bg/50 border border-brand-teal/10 text-xs font-semibold text-white focus:outline-none focus:border-brand-teal transition-colors"
+                    />
+                </div>
+                <!-- Property Type -->
+                <select 
+                    id="filterType" 
+                    onchange="applyFilters()"
+                    class="py-3 px-4 rounded-2xl bg-brand-bg/80 border border-brand-teal/10 text-xs font-bold text-brand-teal focus:outline-none focus:border-brand-teal transition-colors"
+                >
+                    <option value="All">Tüm Emlak Tipleri</option>
+                    <option value="Villa">Villa</option>
+                    <option value="Apartment">Daire (Apartment)</option>
+                    <option value="Office">Ofis (Office)</option>
+                </select>
+                <!-- Price Filter -->
+                <select 
+                    id="filterPrice" 
+                    onchange="applyFilters()"
+                    class="py-3 px-4 rounded-2xl bg-brand-bg/80 border border-brand-teal/10 text-xs font-bold text-brand-teal focus:outline-none focus:border-brand-teal transition-colors"
+                >
+                    <option value="All">Tüm Fiyatlar</option>
+                    <option value="0-15">15M TRY Altı</option>
+                    <option value="15-30">15M - 30M TRY</option>
+                    <option value="30+">30M TRY Üstü</option>
+                </select>
+            </div>
+            
+            <div class="text-xs text-brand-teal font-black uppercase tracking-widest bg-brand-teal/10 px-4 py-2.5 rounded-2xl border border-brand-teal/20" id="resultsCount">
+                Yükleniyor...
+            </div>
+        </div>
+
+        <!-- Split Grid layout: Map & Listings -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px] flex-grow">
+            
+            <!-- Left: Property Listings Grid (lg:col-span-7) -->
+            <div class="lg:col-span-7 flex flex-col gap-6 max-h-[800px] overflow-y-auto pr-2" id="listingsContainer">
+                <!-- Listings populated dynamically -->
+            </div>
+
+            <!-- Right: Interactive Leaflet Map (lg:col-span-5) -->
+            <div class="lg:col-span-5 glass-panel rounded-3xl overflow-hidden relative shadow-2xl min-h-[400px] border border-brand-teal/10">
+                <div id="map" class="w-full h-full min-h-[400px] z-10 bg-brand-bg"></div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Chat messenger floating panel -->
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+        <!-- Messenger Window -->
+        <div id="chatWindow" class="hidden w-80 h-96 glass-panel rounded-3xl overflow-hidden shadow-2xl flex flex-col border border-brand-teal/20 mb-4 transition-all duration-300">
+            <!-- Header -->
+            <div class="bg-brand-card/90 border-b border-brand-teal/15 p-4 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></div>
+                    <span class="text-xs font-black text-white uppercase tracking-wider">Danışman Messenger</span>
+                </div>
+                <button onclick="toggleChat()" class="text-slate-400 hover:text-white transition-colors text-xs font-bold">Kapat</button>
+            </div>
+            <!-- Messages stream -->
+            <div id="chatMessages" class="flex-grow p-4 overflow-y-auto space-y-3 flex flex-col text-xs font-semibold">
+                <!-- Loaded dynamically -->
+            </div>
+            <!-- Input container -->
+            <form onsubmit="sendMessage(event)" class="border-t border-brand-teal/10 p-2.5 flex gap-2 bg-brand-bg/50">
+                <input 
+                    type="text" 
+                    id="chatInput" 
+                    placeholder="Mesajınızı yazın..." 
+                    required 
+                    class="flex-grow py-2 px-3 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-xs text-white focus:outline-none focus:border-brand-teal transition-colors"
+                />
+                <button 
+                    type="submit" 
+                    class="px-4 py-2 rounded-xl bg-brand-teal hover:opacity-90 transition-all text-xs font-bold text-slate-900 shadow-md"
+                >
+                    Gönder
+                </button>
+            </form>
+        </div>
+        
+        <!-- Messenger Toggle button -->
+        <button 
+            onclick="toggleChat()"
+            class="w-14 h-14 rounded-full bg-gradient-to-tr from-brand-teal to-brand-blue flex items-center justify-center shadow-xl shadow-brand-teal/10 text-white font-black text-lg transition-transform hover:scale-105 active:scale-95"
+        >
+            💬
+        </button>
+    </div>
+
+    <!-- Add Listing Modal overlay -->
+    <div id="addModal" class="fixed inset-0 z-50 bg-brand-bg/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-xl rounded-3xl p-6 sm:p-8 shadow-2xl border border-brand-teal/25 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 class="text-xl font-black text-white">Yeni Emlak İlanı Kaydı</h2>
+                    <span class="text-[10px] uppercase font-bold text-brand-teal">Bilgiler .dat dosyasına kaydedilir</span>
+                </div>
+                <button onclick="closeAddModal()" class="text-slate-400 hover:text-white transition-colors font-bold text-sm">X Kapat</button>
+            </div>
+
+            <form onsubmit="submitListing(event)" class="space-y-4 text-xs font-semibold">
+                <div>
+                    <label class="block text-brand-text-secondary font-bold mb-1">İlan Başlığı</label>
+                    <input type="text" id="addTitle" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-colors" placeholder="Lüks Akıllı Rezidans Dairesi" />
+                </div>
+                <div>
+                    <label class="block text-brand-text-secondary font-bold mb-1">Açıklama</label>
+                    <textarea id="addDescription" required rows="3" class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-colors" placeholder="Dairemiz 24 saat güvenlikli, metroya yakın konumda..."></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-brand-text-secondary font-bold mb-1">Fiyat (TRY)</label>
+                        <input type="number" id="addPrice" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-colors" placeholder="15000000" />
+                    </div>
+                    <div>
+                        <label class="block text-brand-text-secondary font-bold mb-1">Emlak Tipi</label>
+                        <select id="addType" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-brand-teal font-bold focus:outline-none focus:border-brand-teal transition-colors">
+                            <option value="Apartment">Daire (Apartment)</option>
+                            <option value="Villa">Villa</option>
+                            <option value="Office">Ofis (Office)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-brand-text-secondary font-bold mb-1">Oda Sayısı</label>
+                        <input type="number" id="addBedrooms" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-colors" placeholder="3" />
+                    </div>
+                    <div>
+                        <label class="block text-brand-text-secondary font-bold mb-1">Metrekare (m²)</label>
+                        <input type="number" id="addSize" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-colors" placeholder="140" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-brand-text-secondary font-bold mb-1">Enlem (Latitude)</label>
+                        <input type="number" step="any" id="addLat" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-colors" placeholder="41.0082" />
+                    </div>
+                    <div>
+                        <label class="block text-brand-text-secondary font-bold mb-1">Boylam (Longitude)</label>
+                        <input type="number" step="any" id="addLng" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-colors" placeholder="28.9784" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="block text-brand-text-secondary font-bold mb-1">Konum Başlığı (İlçe, İl)</label>
+                        <input type="text" id="addLocation" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-colors" placeholder="Beşiktaş, İstanbul" />
+                    </div>
+                    <div>
+                        <label class="block text-brand-text-secondary font-bold mb-1">Resim URL (imageUrl)</label>
+                        <input type="text" id="addImageUrl" class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-colors" placeholder="https://images.unsplash.com/..." />
+                    </div>
+                </div>
+
+                <button 
+                    type="submit" 
+                    class="w-full py-3.5 rounded-xl bg-gradient-to-r from-brand-teal to-brand-blue text-slate-900 font-black uppercase tracking-wider hover:opacity-95 transition-all shadow-lg"
+                >
+                    İlanı Veritabanına Ekle
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- App Logic Script -->
+    <script>
+        let listings = [];
+        let map;
+        let markersGroup;
+
+        // Fetch data from backend api
+        async function fetchListings() {
+            try {
+                const res = await fetch('/api/apex/listings');
+                listings = await res.json();
+                applyFilters();
+            } catch (err) {
+                console.error('Error fetching listings:', err);
+            }
+        }
+
+        // Initialize Map
+        function initMap() {
+            // Center map on Istanbul
+            map = L.map('map').setView([41.0151, 28.9795], 11);
+            
+            // Dark map tile styling
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            markersGroup = L.layerGroup().addTo(map);
+        }
+
+        // Draw Markers on Map
+        function drawMarkers(filtered) {
+            markersGroup.clearLayers();
+            
+            filtered.forEach(item => {
+                if (item.lat && item.lng) {
+                    const marker = L.marker([item.lat, item.lng]);
+                    
+                    const popupContent = `
+                        <div class="text-slate-950 p-2 font-display min-w-[200px]">
+                            <img src="${item.imageUrl}" class="w-full h-20 object-cover rounded-lg mb-2" />
+                            <h4 class="font-bold text-xs line-clamp-1">${item.title}</h4>
+                            <span class="text-brand-blue font-black text-xs block mt-1">${item.price.toLocaleString()} TRY</span>
+                            <span class="text-[9px] uppercase font-bold text-slate-400 block">${item.location}</span>
+                        </div>
+                    `;
+                    
+                    marker.bindPopup(popupContent);
+                    markersGroup.addLayer(marker);
+                }
+            });
+        }
+
+        // Pinpoint listing on map
+        function focusOnMap(lat, lng, title) {
+            if (lat && lng) {
+                map.setView([lat, lng], 14);
+                // Open popup automatically
+                markersGroup.eachLayer(marker => {
+                    const markerLatLng = marker.getLatLng();
+                    if (Math.abs(markerLatLng.lat - lat) < 0.0001 && Math.abs(markerLatLng.lng - lng) < 0.0001) {
+                        marker.openPopup();
+                    }
+                });
+            }
+        }
+
+        // Render listings on UI
+        function renderListings(itemsToRender) {
+            const container = document.getElementById('listingsContainer');
+            container.innerHTML = '';
+
+            if (itemsToRender.length === 0) {
+                container.innerHTML = `
+                    <div class="glass-panel rounded-3xl p-12 text-center text-brand-text-secondary font-medium">
+                        Arama kriterlerine uygun ilan bulunamadı.
+                    </div>
+                `;
+                return;
+            }
+
+            itemsToRender.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "glass-panel rounded-3xl overflow-hidden shadow-xl border border-brand-teal/10 p-5 flex flex-col sm:flex-row gap-5 transition-all duration-300 hover:border-brand-teal/30 hover:shadow-brand-teal/5";
+                
+                card.innerHTML = `
+                    <div class="w-full sm:w-48 h-36 rounded-2xl overflow-hidden bg-brand-bg-secondary flex-shrink-0 relative">
+                        <img src="${item.imageUrl}" alt="${item.title}" class="w-full h-full object-cover" />
+                        <span class="absolute top-2.5 left-2.5 px-3 py-1 rounded-xl bg-slate-900/80 text-brand-teal text-[9px] font-black uppercase tracking-wider">
+                            ${item.type}
+                        </span>
+                    </div>
+                    <div class="flex-grow flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start gap-2">
+                                <h3 class="text-base sm:text-lg font-bold text-white hover:text-brand-teal transition-colors cursor-pointer" onclick="focusOnMap(${item.lat}, ${item.lng}, '${item.title}')">
+                                    ${item.title}
+                                </h3>
+                                <span class="text-brand-teal font-black text-base whitespace-nowrap">
+                                    ${item.price.toLocaleString()} TRY
+                                </span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 font-bold block mt-1">${item.location}</span>
+                            <p class="text-xs text-slate-300 font-semibold line-clamp-2 mt-2 leading-relaxed">${item.description}</p>
+                        </div>
+                        
+                        <div class="flex justify-between items-center mt-4 border-t border-brand-teal/5 pt-4">
+                            <div class="flex gap-4 text-[10px] font-bold text-slate-400">
+                                <span>🛏️ ${item.bedrooms} Oda</span>
+                                <span>📐 ${item.size} m²</span>
+                            </div>
+                            <button 
+                                onclick="focusOnMap(${item.lat}, ${item.lng}, '${item.title}')"
+                                class="px-4 py-2 rounded-xl bg-brand-card hover:bg-brand-teal/10 border border-brand-teal/10 hover:border-brand-teal/30 text-white text-[10px] font-black uppercase tracking-wider transition-all"
+                            >
+                                Haritada Göster
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const query = document.getElementById('searchQuery').value.toLowerCase();
+            const type = document.getElementById('filterType').value;
+            const priceRange = document.getElementById('filterPrice').value;
+
+            let filtered = listings;
+
+            // Filter by search query
+            if (query) {
+                filtered = filtered.filter(item => 
+                    item.title.toLowerCase().includes(query) || 
+                    item.description.toLowerCase().includes(query) || 
+                    item.location.toLowerCase().includes(query)
+                );
+            }
+
+            // Filter by type
+            if (type !== 'All') {
+                filtered = filtered.filter(item => item.type === type);
+            }
+
+            // Filter by price range
+            if (priceRange !== 'All') {
+                if (priceRange === '0-15') {
+                    filtered = filtered.filter(item => item.price < 15000000);
+                } else if (priceRange === '15-30') {
+                    filtered = filtered.filter(item => item.price >= 15000000 && item.price <= 30000000);
+                } else if (priceRange === '30+') {
+                    filtered = filtered.filter(item => item.price > 30000000);
+                }
+            }
+
+            document.getElementById('resultsCount').innerText = `${filtered.length} İLAN BULUNDU`;
+            renderListings(filtered);
+            drawMarkers(filtered);
+        }
+
+        // Add Listing Modal functions
+        function openAddModal() {
+            document.getElementById('addModal').classList.remove('hidden');
+            document.getElementById('addModal').classList.add('flex');
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.add('hidden');
+            document.getElementById('addModal').classList.remove('flex');
+        }
+
+        // Submit new listing
+        async function submitListing(e) {
+            e.preventDefault();
+            
+            const payload = {
+                title: document.getElementById('addTitle').value,
+                description: document.getElementById('addDescription').value,
+                price: Number(document.getElementById('addPrice').value),
+                type: document.getElementById('addType').value,
+                location: document.getElementById('addLocation').value,
+                lat: Number(document.getElementById('addLat').value) || 41.0151,
+                lng: Number(document.getElementById('addLng').value) || 28.9795,
+                bedrooms: Number(document.getElementById('addBedrooms').value) || 2,
+                size: Number(document.getElementById('addSize').value) || 100,
+                imageUrl: document.getElementById('addImageUrl').value || 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=800'
+            };
+
+            try {
+                const res = await fetch('/api/apex/listings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (res.ok) {
+                    closeAddModal();
+                    // Reset form
+                    e.target.reset();
+                    fetchListings();
+                } else {
+                    alert('İlan eklenemedi.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('İletişim hatası.');
+            }
+        }
+
+        // Messenger window functions
+        function toggleChat() {
+            const chat = document.getElementById('chatWindow');
+            chat.classList.toggle('hidden');
+            if (!chat.classList.contains('hidden')) {
+                fetchMessages();
+            }
+        }
+
+        async function fetchMessages() {
+            try {
+                const res = await fetch('/api/apex/messages');
+                const messages = await res.json();
+                renderMessages(messages);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderMessages(messages) {
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = '';
+            
+            messages.forEach(msg => {
+                const bubble = document.createElement('div');
+                const isUser = msg.sender !== 'Sistem' && msg.sender !== 'Agent';
+                bubble.className = `p-3 rounded-2xl max-w-[80%] ${
+                    isUser 
+                        ? 'bg-brand-teal text-slate-900 self-end rounded-br-none shadow-md' 
+                        : 'bg-brand-card text-slate-200 self-start rounded-bl-none border border-brand-teal/5'
+                }`;
+                bubble.innerHTML = `
+                    <span class="block text-[8px] font-black uppercase opacity-70 mb-0.5">${msg.sender}</span>
+                    <span>${msg.text}</span>
+                `;
+                container.appendChild(bubble);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('chatInput');
+            const payload = {
+                sender: 'Müşteri',
+                text: input.value
+            };
+            
+            try {
+                const res = await fetch('/api/apex/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (res.ok) {
+                    input.value = '';
+                    fetchMessages();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // App Init Bootstrap
+        window.addEventListener('load', () => {
+            initMap();
+            fetchListings();
+            
+            // Poll chat messages every 5 seconds if chat open
+            setInterval(() => {
+                const chat = document.getElementById('chatWindow');
+                if (!chat.classList.contains('hidden')) {
+                    fetchMessages();
+                }
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
