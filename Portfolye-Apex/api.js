@@ -6,7 +6,6 @@ const path = require('path');
 const listingsFile = path.join(__dirname, 'listings.dat');
 const messagesFile = path.join(__dirname, 'messages.dat');
 
-// Helper to read JSON from a file, returning a default if it doesn't exist
 const readData = (filePath, defaultData) => {
     try {
         if (!fs.existsSync(filePath)) {
@@ -21,7 +20,6 @@ const readData = (filePath, defaultData) => {
     }
 };
 
-// Helper to write JSON to a file
 const writeData = (filePath, data) => {
     try {
         fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
@@ -32,7 +30,6 @@ const writeData = (filePath, data) => {
     }
 };
 
-// Initial listings seed data
 const initialListings = [
     {
         id: 1,
@@ -97,24 +94,20 @@ const initialMessages = [
     }
 ];
 
-// --- API ENDPOINTS ---
-
-// GET listings
 router.get('/listings', (req, res) => {
     const listings = readData(listingsFile, initialListings);
     res.json(listings);
 });
 
-// POST listing
 router.post('/listings', (req, res) => {
     const { title, description, price, type, location, lat, lng, bedrooms, size, imageUrl } = req.body;
-    
+
     if (!title || !description || !price || !type || !location) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
     const listings = readData(listingsFile, initialListings);
-    
+
     const newListing = {
         id: listings.length > 0 ? Math.max(...listings.map(l => l.id)) + 1 : 1,
         title,
@@ -134,7 +127,6 @@ router.post('/listings', (req, res) => {
     res.status(201).json(newListing);
 });
 
-// DELETE listing
 router.delete('/listings/:id', (req, res) => {
     const id = Number(req.params.id);
     if (isNaN(id)) {
@@ -152,13 +144,11 @@ router.delete('/listings/:id', (req, res) => {
     res.json({ success: true, message: 'Listing deleted successfully' });
 });
 
-// GET messages
 router.get('/messages', (req, res) => {
     const messages = readData(messagesFile, initialMessages);
     res.json(messages);
 });
 
-// POST message
 router.post('/messages', (req, res) => {
     const { sender, text } = req.body;
     if (!sender || !text) {
