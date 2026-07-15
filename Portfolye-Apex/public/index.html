@@ -70,21 +70,48 @@
                 </div>
             </div>
 
-            <button 
-                onclick="openAddModal()" 
-                class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-teal to-brand-blue hover:opacity-95 transition-all text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-brand-teal/10 active:scale-95"
-            >
-                + Yeni İlan Ekle
-            </button>
+            <div class="flex items-center gap-4">
+                <button 
+                    onclick="openAddModal()" 
+                    class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-teal to-brand-blue hover:opacity-95 transition-all text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-brand-teal/10 active:scale-95 cursor-pointer"
+                >
+                    + Yeni İlan Ekle
+                </button>
+            </div>
         </div>
     </header>
 
     <!-- Main Container -->
     <main class="flex-grow max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
         
+        <!-- Live Stats Dashboard -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="glass-panel rounded-2xl p-4 flex justify-between items-center border border-brand-teal/10">
+                <div>
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">TOPLAM İLAN</span>
+                    <span class="text-2xl font-extrabold text-white mt-1 block" id="statTotalListings">0</span>
+                </div>
+                <div class="text-2xl opacity-30">🏠</div>
+            </div>
+            <div class="glass-panel rounded-2xl p-4 flex justify-between items-center border border-brand-teal/10">
+                <div>
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">ORTALAMA M²</span>
+                    <span class="text-2xl font-extrabold text-brand-teal mt-1 block" id="statAvgSize">0 m²</span>
+                </div>
+                <div class="text-2xl opacity-30">📐</div>
+            </div>
+            <div class="glass-panel rounded-2xl p-4 flex justify-between items-center border border-brand-teal/10">
+                <div>
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">ORTALAMA FİYAT</span>
+                    <span class="text-2xl font-extrabold text-brand-orange mt-1 block" id="statAvgPrice">0 TRY</span>
+                </div>
+                <div class="text-2xl opacity-30">💰</div>
+            </div>
+        </div>
+
         <!-- Filters glass bar -->
         <div class="glass-panel rounded-3xl p-6 flex flex-col md:flex-row gap-4 items-center justify-between shadow-2xl">
-            <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+            <div class="flex flex-wrap gap-4 w-full md:w-auto items-center">
                 <!-- Search -->
                 <div class="relative w-full sm:w-64">
                     <input 
@@ -99,7 +126,7 @@
                 <select 
                     id="filterType" 
                     onchange="applyFilters()"
-                    class="py-3 px-4 rounded-2xl bg-brand-bg/80 border border-brand-teal/10 text-xs font-bold text-brand-teal focus:outline-none focus:border-brand-teal transition-colors"
+                    class="py-3 px-4 rounded-2xl bg-brand-bg/80 border border-brand-teal/10 text-xs font-bold text-brand-teal focus:outline-none focus:border-brand-teal transition-colors cursor-pointer"
                 >
                     <option value="All">Tüm Emlak Tipleri</option>
                     <option value="Villa">Villa</option>
@@ -110,13 +137,21 @@
                 <select 
                     id="filterPrice" 
                     onchange="applyFilters()"
-                    class="py-3 px-4 rounded-2xl bg-brand-bg/80 border border-brand-teal/10 text-xs font-bold text-brand-teal focus:outline-none focus:border-brand-teal transition-colors"
+                    class="py-3 px-4 rounded-2xl bg-brand-bg/80 border border-brand-teal/10 text-xs font-bold text-brand-teal focus:outline-none focus:border-brand-teal transition-colors cursor-pointer"
                 >
                     <option value="All">Tüm Fiyatlar</option>
                     <option value="0-15">15M TRY Altı</option>
                     <option value="15-30">15M - 30M TRY</option>
                     <option value="30+">30M TRY Üstü</option>
                 </select>
+                <!-- Favorites Only Toggle -->
+                <button 
+                    onclick="toggleFavFilter()" 
+                    id="favFilterBtn"
+                    class="py-3 px-4 rounded-2xl border border-brand-teal/20 text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 bg-brand-bg/40 text-brand-teal hover:border-brand-teal/40 cursor-pointer"
+                >
+                    <span>❤️</span> Sadece Favoriler (<span id="favFilterCount">0</span>)
+                </button>
             </div>
             
             <div class="text-xs text-brand-teal font-black uppercase tracking-widest bg-brand-teal/10 px-4 py-2.5 rounded-2xl border border-brand-teal/20" id="resultsCount">
@@ -168,7 +203,7 @@
                 />
                 <button 
                     type="submit" 
-                    class="px-4 py-2 rounded-xl bg-brand-teal hover:opacity-90 transition-all text-xs font-bold text-slate-900 shadow-md"
+                    class="px-4 py-2 rounded-xl bg-brand-teal hover:opacity-90 transition-all text-xs font-bold text-slate-900 shadow-md cursor-pointer"
                 >
                     Gönder
                 </button>
@@ -178,7 +213,7 @@
         <!-- Messenger Toggle button -->
         <button 
             onclick="toggleChat()"
-            class="w-14 h-14 rounded-full bg-gradient-to-tr from-brand-teal to-brand-blue flex items-center justify-center shadow-xl shadow-brand-teal/10 text-white font-black text-lg transition-transform hover:scale-105 active:scale-95"
+            class="w-14 h-14 rounded-full bg-gradient-to-tr from-brand-teal to-brand-blue flex items-center justify-center shadow-xl shadow-brand-teal/10 text-white font-black text-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer"
         >
             💬
         </button>
@@ -192,74 +227,162 @@
                     <h2 class="text-xl font-black text-white">Yeni Emlak İlanı Kaydı</h2>
                     <span class="text-[10px] uppercase font-bold text-brand-teal">Bilgiler .dat dosyasına kaydedilir</span>
                 </div>
-                <button onclick="closeAddModal()" class="text-slate-400 hover:text-white transition-colors font-bold text-sm">X Kapat</button>
+                <button onclick="closeAddModal()" class="text-slate-400 hover:text-white transition-colors font-bold text-sm cursor-pointer">X Kapat</button>
             </div>
 
             <form onsubmit="submitListing(event)" class="space-y-4 text-xs font-semibold">
                 <div>
                     <label class="block text-brand-text-secondary font-bold mb-1">İlan Başlığı</label>
-                    <input type="text" id="addTitle" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-colors" placeholder="Lüks Akıllı Rezidans Dairesi" />
+                    <input type="text" id="addTitle" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: Boğaz Manzaralı Lüks Yalı" />
                 </div>
                 <div>
                     <label class="block text-brand-text-secondary font-bold mb-1">Açıklama</label>
-                    <textarea id="addDescription" required rows="3" class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-colors" placeholder="Dairemiz 24 saat güvenlikli, metroya yakın konumda..."></textarea>
+                    <textarea id="addDescription" required rows="3" class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-all" placeholder="İlan detayları..."></textarea>
                 </div>
-
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-brand-text-secondary font-bold mb-1">Fiyat (TRY)</label>
-                        <input type="number" id="addPrice" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-colors" placeholder="15000000" />
+                        <input type="number" id="addPrice" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: 25000000" />
                     </div>
                     <div>
                         <label class="block text-brand-text-secondary font-bold mb-1">Emlak Tipi</label>
-                        <select id="addType" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-brand-teal font-bold focus:outline-none focus:border-brand-teal transition-colors">
-                            <option value="Apartment">Daire (Apartment)</option>
+                        <select id="addType" class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-brand-teal focus:outline-none focus:border-brand-teal transition-all cursor-pointer">
                             <option value="Villa">Villa</option>
+                            <option value="Apartment">Daire (Apartment)</option>
                             <option value="Office">Ofis (Office)</option>
                         </select>
                     </div>
                 </div>
-
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-4">
                     <div>
                         <label class="block text-brand-text-secondary font-bold mb-1">Oda Sayısı</label>
-                        <input type="number" id="addBedrooms" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-colors" placeholder="3" />
+                        <input type="number" id="addBedrooms" class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-all" placeholder="Oda" />
                     </div>
                     <div>
-                        <label class="block text-brand-text-secondary font-bold mb-1">Metrekare (m²)</label>
-                        <input type="number" id="addSize" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-colors" placeholder="140" />
+                        <label class="block text-brand-text-secondary font-bold mb-1">Büyüklük (m²)</label>
+                        <input type="number" id="addSize" class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-all" placeholder="m²" />
+                    </div>
+                    <div>
+                        <label class="block text-brand-text-secondary font-bold mb-1">Lokasyon</label>
+                        <input type="text" id="addLocation" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: Bebek, İstanbul" />
                     </div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-brand-text-secondary font-bold mb-1">Enlem (Latitude)</label>
-                        <input type="number" step="any" id="addLat" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-colors" placeholder="41.0082" />
+                        <label class="block text-brand-text-secondary font-bold mb-1">Enlem (Lat)</label>
+                        <input type="text" id="addLat" class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: 41.0772" />
                     </div>
                     <div>
-                        <label class="block text-brand-text-secondary font-bold mb-1">Boylam (Longitude)</label>
-                        <input type="number" step="any" id="addLng" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-colors" placeholder="28.9784" />
+                        <label class="block text-brand-text-secondary font-bold mb-1">Boylam (Lng)</label>
+                        <input type="text" id="addLng" class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: 29.0435" />
                     </div>
                 </div>
-
-                <div class="grid grid-cols-1 gap-4">
-                    <div>
-                        <label class="block text-brand-text-secondary font-bold mb-1">Konum Başlığı (İlçe, İl)</label>
-                        <input type="text" id="addLocation" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-colors" placeholder="Beşiktaş, İstanbul" />
-                    </div>
-                    <div>
-                        <label class="block text-brand-text-secondary font-bold mb-1">Resim URL (imageUrl)</label>
-                        <input type="text" id="addImageUrl" class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/85 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-colors" placeholder="https://images.unsplash.com/..." />
-                    </div>
+                <div>
+                    <label class="block text-brand-text-secondary font-bold mb-1">Görsel Bağlantısı (URL)</label>
+                    <input type="url" id="addImageUrl" class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-all" placeholder="Resim URL (Boş bırakılırsa varsayılan atanır)" />
                 </div>
-
                 <button 
                     type="submit" 
-                    class="w-full py-3.5 rounded-xl bg-gradient-to-r from-brand-teal to-brand-blue text-slate-900 font-black uppercase tracking-wider hover:opacity-95 transition-all shadow-lg"
+                    class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-teal to-brand-blue text-slate-900 text-xs font-black uppercase tracking-wider shadow-lg shadow-brand-teal/20 transition-all hover:opacity-95 cursor-pointer"
                 >
                     İlanı Veritabanına Ekle
                 </button>
             </form>
+        </div>
+    </div>
+
+    <!-- Advanced Detail Modal overlay -->
+    <div id="detailModal" class="fixed inset-0 z-50 bg-brand-bg/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-2xl rounded-3xl p-6 sm:p-8 shadow-2xl border border-brand-teal/25 max-h-[90vh] overflow-y-auto flex flex-col lg:flex-row gap-6 relative">
+            
+            <!-- Close btn -->
+            <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-all text-xs font-black bg-brand-card/80 py-1.5 px-3 rounded-xl border border-brand-teal/15 cursor-pointer z-50">Kapat X</button>
+
+            <!-- Main details display -->
+            <div class="w-full flex flex-col gap-5">
+                <div class="h-56 rounded-2xl overflow-hidden relative">
+                    <img id="detailImg" src="" class="w-full h-full object-cover" />
+                    <span id="detailBadge" class="absolute top-3 left-3 px-3 py-1 rounded-xl bg-slate-900/90 text-brand-teal text-[10px] font-black uppercase tracking-wider border border-brand-teal/25"></span>
+                </div>
+                
+                <div>
+                    <div class="flex justify-between items-start flex-wrap gap-2">
+                        <h2 id="detailTitle" class="text-xl font-black text-white"></h2>
+                        <span id="detailPrice" class="text-brand-orange font-black text-xl"></span>
+                    </div>
+                    <span id="detailLocation" class="text-slate-400 font-bold block mt-1 text-xs"></span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 border-t border-b border-brand-teal/5 py-4 text-xs font-semibold">
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Oda Sayısı:</span>
+                        <span id="detailBedrooms" class="text-white font-bold"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Büyüklük (m²):</span>
+                        <span id="detailSize" class="text-white font-bold"></span>
+                    </div>
+                </div>
+
+                <p id="detailDesc" class="text-slate-300 text-xs leading-relaxed font-semibold"></p>
+
+                <!-- Actions / Simulators -->
+                <div class="flex flex-wrap gap-3 pt-2">
+                    <button onclick="simulateVirtualTour()" class="flex-grow py-2.5 rounded-xl bg-brand-teal/10 hover:bg-brand-teal/20 border border-brand-teal/20 text-brand-teal text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                        🌐 3D Sanal Tur
+                    </button>
+                    <button onclick="simulateBrochure()" class="flex-grow py-2.5 rounded-xl bg-brand-blue/10 hover:bg-brand-blue/20 border border-brand-blue/20 text-brand-teal text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                        📄 Katalog İndir
+                    </button>
+                    <button id="detailDeleteBtn" class="py-2.5 px-4 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-black uppercase tracking-wider transition-all cursor-pointer">
+                        🗑️ İlanı Sil
+                    </button>
+                </div>
+
+                <!-- Schedule Viewing Form -->
+                <div class="border-t border-brand-teal/10 pt-4 mt-2">
+                    <h3 class="text-xs font-black text-white uppercase tracking-wider mb-3">Danışmandan Randevu Talep Et</h3>
+                    
+                    <!-- Appointment status box -->
+                    <div id="appointmentStatus" class="hidden p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold mb-3"></div>
+
+                    <form id="appointmentForm" onsubmit="bookAppointment(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <input type="date" id="appointmentDate" required class="py-2 px-3 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-xs text-white focus:outline-none focus:border-brand-teal transition-all" />
+                        <select id="appointmentTime" class="py-2 px-3 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-xs text-brand-teal focus:outline-none focus:border-brand-teal transition-all cursor-pointer">
+                            <option value="10:00">10:00</option>
+                            <option value="12:00">12:00</option>
+                            <option value="14:00">14:00</option>
+                            <option value="16:00">16:00</option>
+                        </select>
+                        <button type="submit" class="py-2 rounded-xl bg-brand-teal text-slate-900 text-xs font-black uppercase tracking-wider shadow-md hover:opacity-95 transition-all cursor-pointer">Randevu Al</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Virtual Tour Mockup Overlay -->
+    <div id="virtualTourOverlay" class="fixed inset-0 z-50 bg-black/90 hidden items-center justify-center p-4">
+        <div class="w-full max-w-3xl aspect-video glass-panel rounded-3xl p-2 relative overflow-hidden flex flex-col justify-center items-center text-center">
+            <button onclick="closeVirtualTour()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-all text-xs font-black bg-slate-900/80 py-1.5 px-3 rounded-xl border border-brand-teal/15 cursor-pointer z-50">Çıkış X</button>
+            <div id="virtualSpinner" class="flex flex-col items-center">
+                <div class="w-12 h-12 rounded-full border-4 border-brand-teal border-t-transparent animate-spin mb-3"></div>
+                <p class="text-xs text-brand-teal font-black uppercase tracking-widest">3D sanal tur motoru yükleniyor...</p>
+            </div>
+            <!-- Simulated panorama frame -->
+            <div id="virtualView" class="hidden w-full h-full relative rounded-2xl overflow-hidden bg-cover bg-center transition-all duration-1000 scale-105" style="background-image: url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1200')">
+                <div class="absolute inset-0 bg-black/10"></div>
+                <!-- Controls overlay -->
+                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 py-2.5 px-5 rounded-2xl bg-slate-950/80 border border-brand-teal/20 flex gap-4 text-xs font-black text-brand-teal select-none z-50">
+                    <span class="cursor-pointer hover:text-white" onclick="rotateTour(-30)">◀ SOLA DÖN</span>
+                    <span class="text-slate-600">|</span>
+                    <span class="cursor-pointer hover:text-white" onclick="rotateTour(30)">SAĞA DÖN ▶</span>
+                </div>
+                <div class="absolute top-6 left-6 py-1.5 px-3 rounded-xl bg-slate-950/80 border border-brand-teal/25 text-[10px] font-black uppercase tracking-wider text-white">
+                    3D Sanal Görünüm Modu
+                </div>
+            </div>
         </div>
     </div>
 
@@ -272,16 +395,37 @@
         let listings = [];
         let map;
         let markersGroup;
+        let filterOnlyFavs = false;
+        let selectedListingId = null;
+        let currentRotation = 0;
 
         // Fetch data from backend api
         async function fetchListings() {
             try {
                 const res = await fetch(`${API_BASE}/api/apex/listings`);
                 listings = await res.json();
+                
+                // Update live statistics dashboard
+                calculateStats();
+                
                 applyFilters();
             } catch (err) {
                 console.error('Error fetching listings:', err);
             }
+        }
+
+        // Calculate statistics
+        function calculateStats() {
+            if (listings.length === 0) return;
+            
+            const total = listings.length;
+            const avgSize = Math.round(listings.reduce((sum, item) => sum + (item.size || 0), 0) / total);
+            const avgPrice = Math.round(listings.reduce((sum, item) => sum + (item.price || 0), 0) / total);
+
+            document.getElementById('statTotalListings').innerText = total;
+            document.getElementById('statAvgSize').innerText = `${avgSize} m²`;
+            document.getElementById('statAvgPrice').innerText = `${avgPrice.toLocaleString()} TRY`;
+            document.getElementById('favFilterCount').innerText = getFavorites().length;
         }
 
         // Initialize Map
@@ -311,6 +455,7 @@
                             <h4 class="font-bold text-xs line-clamp-1">${item.title}</h4>
                             <span class="text-brand-blue font-black text-xs block mt-1">${item.price.toLocaleString()} TRY</span>
                             <span class="text-[9px] uppercase font-bold text-slate-400 block">${item.location}</span>
+                            <button onclick="openDetailModal(${item.id})" class="w-full py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-black uppercase tracking-wider mt-2 cursor-pointer">Detayları Aç</button>
                         </div>
                     `;
                     
@@ -334,6 +479,40 @@
             }
         }
 
+        // Favorites state helper
+        function getFavorites() {
+            const favs = localStorage.getItem('apex_favorites');
+            return favs ? JSON.parse(favs) : [];
+        }
+
+        function toggleFavorite(e, id) {
+            e.stopPropagation();
+            let favs = getFavorites();
+            if (favs.includes(id)) {
+                favs = favs.filter(fid => fid !== id);
+            } else {
+                favs.push(id);
+            }
+            localStorage.setItem('apex_favorites', JSON.stringify(favs));
+            
+            // Re-render
+            calculateStats();
+            applyFilters();
+        }
+
+        function toggleFavFilter() {
+            filterOnlyFavs = !filterOnlyFavs;
+            const btn = document.getElementById('favFilterBtn');
+            if (filterOnlyFavs) {
+                btn.classList.add('bg-brand-teal', 'text-slate-900');
+                btn.classList.remove('bg-brand-bg/40', 'text-brand-teal');
+            } else {
+                btn.classList.remove('bg-brand-teal', 'text-slate-900');
+                btn.classList.add('bg-brand-bg/40', 'text-brand-teal');
+            }
+            applyFilters();
+        }
+
         // Render listings on UI
         function renderListings(itemsToRender) {
             const container = document.getElementById('listingsContainer');
@@ -348,9 +527,13 @@
                 return;
             }
 
+            const favs = getFavorites();
+
             itemsToRender.forEach(item => {
+                const isFav = favs.includes(item.id);
                 const card = document.createElement('div');
-                card.className = "glass-panel rounded-3xl overflow-hidden shadow-xl border border-brand-teal/10 p-5 flex flex-col sm:flex-row gap-5 transition-all duration-300 hover:border-brand-teal/30 hover:shadow-brand-teal/5";
+                card.className = "glass-panel rounded-3xl overflow-hidden shadow-xl border border-brand-teal/10 p-5 flex flex-col sm:flex-row gap-5 transition-all duration-300 hover:border-brand-teal/30 hover:shadow-brand-teal/5 relative group cursor-pointer";
+                card.onclick = () => openDetailModal(item.id);
                 
                 card.innerHTML = `
                     <div class="w-full sm:w-48 h-36 rounded-2xl overflow-hidden bg-brand-bg-secondary flex-shrink-0 relative">
@@ -358,32 +541,32 @@
                         <span class="absolute top-2.5 left-2.5 px-3 py-1 rounded-xl bg-slate-900/80 text-brand-teal text-[9px] font-black uppercase tracking-wider">
                             ${item.type}
                         </span>
+                        
+                        <!-- Favorite Heart button -->
+                        <button 
+                            onclick="toggleFavorite(event, ${item.id})"
+                            class="absolute top-2.5 right-2.5 w-8 h-8 rounded-xl bg-slate-900/80 hover:bg-slate-900 border border-brand-teal/10 hover:border-brand-teal/35 flex items-center justify-center text-sm transition-transform active:scale-90 cursor-pointer"
+                        >
+                            ${isFav ? '❤️' : '🤍'}
+                        </button>
                     </div>
                     <div class="flex-grow flex flex-col justify-between">
                         <div>
                             <div class="flex justify-between items-start gap-2">
-                                <h3 class="text-base sm:text-lg font-bold text-white hover:text-brand-teal transition-colors cursor-pointer" onclick="focusOnMap(${item.lat}, ${item.lng}, '${item.title}')">
+                                <h3 class="text-base sm:text-lg font-bold text-white group-hover:text-brand-teal transition-colors" onclick="event.stopPropagation(); focusOnMap(${item.lat}, ${item.lng}, '${item.title}')">
                                     ${item.title}
                                 </h3>
-                                <span class="text-brand-teal font-black text-base whitespace-nowrap">
+                                <span class="text-brand-orange font-black text-base whitespace-nowrap">
                                     ${item.price.toLocaleString()} TRY
                                 </span>
                             </div>
                             <span class="text-[10px] text-slate-400 font-bold block mt-1">${item.location}</span>
                             <p class="text-xs text-slate-300 font-semibold line-clamp-2 mt-2 leading-relaxed">${item.description}</p>
                         </div>
-                        
-                        <div class="flex justify-between items-center mt-4 border-t border-brand-teal/5 pt-4">
-                            <div class="flex gap-4 text-[10px] font-bold text-slate-400">
-                                <span>🛏️ ${item.bedrooms} Oda</span>
-                                <span>📐 ${item.size} m²</span>
-                            </div>
-                            <button 
-                                onclick="focusOnMap(${item.lat}, ${item.lng}, '${item.title}')"
-                                class="px-4 py-2 rounded-xl bg-brand-card hover:bg-brand-teal/10 border border-brand-teal/10 hover:border-brand-teal/30 text-white text-[10px] font-black uppercase tracking-wider transition-all"
-                            >
-                                Haritada Göster
-                            </button>
+                        <div class="flex flex-wrap gap-4 items-center mt-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                            <span>📐 ${item.size} m²</span>
+                            <span>🛌 ${item.bedrooms} Oda</span>
+                            <span class="text-brand-teal ml-auto group-hover:translate-x-1 transition-transform">Detayları Gör ➔</span>
                         </div>
                     </div>
                 `;
@@ -424,6 +607,12 @@
                 }
             }
 
+            // Filter by favorites only
+            if (filterOnlyFavs) {
+                const favs = getFavorites();
+                filtered = filtered.filter(item => favs.includes(item.id));
+            }
+
             document.getElementById('resultsCount').innerText = `${filtered.length} İLAN BULUNDU`;
             renderListings(filtered);
             drawMarkers(filtered);
@@ -435,9 +624,121 @@
             document.getElementById('addModal').classList.add('flex');
         }
 
+        // Close add listing modal
         function closeAddModal() {
             document.getElementById('addModal').classList.add('hidden');
             document.getElementById('addModal').classList.remove('flex');
+        }
+
+        // Advanced Detail Modal functions
+        function openDetailModal(id) {
+            const item = listings.find(l => l.id === id);
+            if (!item) return;
+
+            selectedListingId = id;
+            document.getElementById('detailImg').src = item.imageUrl;
+            document.getElementById('detailBadge').innerText = item.type;
+            document.getElementById('detailTitle').innerText = item.title;
+            document.getElementById('detailPrice').innerText = `${item.price.toLocaleString()} TRY`;
+            document.getElementById('detailLocation').innerText = item.location;
+            document.getElementById('detailBedrooms').innerText = `${item.bedrooms} Odalı`;
+            document.getElementById('detailSize').innerText = `${item.size} m²`;
+            document.getElementById('detailDesc').innerText = item.description;
+
+            // Reset appointment status
+            const booked = localStorage.getItem(`apex_booked_${id}`);
+            const statusBox = document.getElementById('appointmentStatus');
+            const form = document.getElementById('appointmentForm');
+            if (booked) {
+                statusBox.innerText = `✅ Randevunuz Rezerve Edildi: ${booked}`;
+                statusBox.classList.remove('hidden');
+                form.classList.add('hidden');
+            } else {
+                statusBox.classList.add('hidden');
+                form.classList.remove('hidden');
+            }
+
+            // Set Delete button click
+            document.getElementById('detailDeleteBtn').onclick = () => deleteListing(id);
+
+            // Display modal
+            document.getElementById('detailModal').classList.remove('hidden');
+            document.getElementById('detailModal').classList.add('flex');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+            document.getElementById('detailModal').classList.remove('flex');
+            selectedListingId = null;
+        }
+
+        // Delete listing from database
+        async function deleteListing(id) {
+            if (!confirm('Bu ilanı silmek istediğinize emin misiniz? (Bilgiler .dat dosyasından kalıcı olarak silinecektir)')) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/apex/listings/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (res.ok) {
+                    closeDetailModal();
+                    fetchListings();
+                } else {
+                    alert('İlan silinemedi.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('İletişim hatası.');
+            }
+        }
+
+        // Virtual Tour simulation
+        function simulateVirtualTour() {
+            document.getElementById('virtualTourOverlay').classList.remove('hidden');
+            document.getElementById('virtualTourOverlay').classList.add('flex');
+            
+            document.getElementById('virtualSpinner').classList.remove('hidden');
+            document.getElementById('virtualView').classList.add('hidden');
+            
+            setTimeout(() => {
+                document.getElementById('virtualSpinner').classList.add('hidden');
+                document.getElementById('virtualView').classList.remove('hidden');
+                currentRotation = 0;
+                document.getElementById('virtualView').style.backgroundPosition = '0px center';
+            }, 1200);
+        }
+
+        function closeVirtualTour() {
+            document.getElementById('virtualTourOverlay').classList.add('hidden');
+            document.getElementById('virtualTourOverlay').classList.remove('flex');
+        }
+
+        function rotateTour(amount) {
+            currentRotation += amount;
+            document.getElementById('virtualView').style.backgroundPosition = `${currentRotation}px center`;
+        }
+
+        // Simulate Catalog Brochure download
+        function simulateBrochure() {
+            alert('📄 Emlak Satış Kataloğu indirme isteği simüle edildi. PDF broşür dosyası hazırlanıyor...');
+        }
+
+        // Book viewed appointment
+        function bookAppointment(e) {
+            e.preventDefault();
+            const date = document.getElementById('appointmentDate').value;
+            const time = document.getElementById('appointmentTime').value;
+            if (!date) return;
+
+            const bookingString = `${date} saat ${time}`;
+            localStorage.setItem(`apex_booked_${selectedListingId}`, bookingString);
+
+            // Update UI status
+            const statusBox = document.getElementById('appointmentStatus');
+            statusBox.innerText = `✅ Randevunuz Rezerve Edildi: ${bookingString}`;
+            statusBox.classList.remove('hidden');
+            document.getElementById('appointmentForm').classList.add('hidden');
         }
 
         // Submit new listing

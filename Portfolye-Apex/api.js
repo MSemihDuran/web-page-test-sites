@@ -134,6 +134,24 @@ router.post('/listings', (req, res) => {
     res.status(201).json(newListing);
 });
 
+// DELETE listing
+router.delete('/listings/:id', (req, res) => {
+    const id = Number(req.params.id);
+    if (isNaN(id)) {
+        return res.status(400).json({ error: 'Invalid ID format' });
+    }
+
+    let listings = readData(listingsFile, initialListings);
+    const index = listings.findIndex(l => l.id === id);
+    if (index === -1) {
+        return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    listings.splice(index, 1);
+    writeData(listingsFile, listings);
+    res.json({ success: true, message: 'Listing deleted successfully' });
+});
+
 // GET messages
 router.get('/messages', (req, res) => {
     const messages = readData(messagesFile, initialMessages);
