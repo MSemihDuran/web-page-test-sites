@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', sans-serif;
+  --font-outfit: 'Outfit', sans-serif;
+  
+  /* Logodan Birebir Damlalıkla Alınan Renkler */
+  --color-brand-bg: #070913;          /* Derin, şık gece arka planı */
+  --color-brand-navy: #1B204A;        /* Logodaki orijinal asil lacivert */
+  --color-brand-gold: #C5A059;        /* Logodaki orijinal mat altın */
+  --color-brand-gold-glow: #E5C483;   /* Işıltılı detay altını */
+  --color-brand-white: #FFFFFF;
+}
+
+body {
+  background-color: #070913;
+  color: #FFFFFF;
+  overflow-x: hidden;
+}
