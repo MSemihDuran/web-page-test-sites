@@ -9,17 +9,6 @@ import QuoteDetail from './pages/QuoteDetail';
 import ProductDetail from './pages/ProductDetail';
 import Settings from './pages/Settings';
 
-const AuthHomeRouter = () => {
-  const token = localStorage.getItem('token');
-  const user = localStorage.getItem('user');
-
-  if (token && user) {
-    return <Dashboard />;
-  }
-
-  return <Home />;
-};
-
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   const user = localStorage.getItem('user');
@@ -39,7 +28,12 @@ function App() {
       <Router>
       <Routes>
         {}
-        <Route path="/" element={<AuthHomeRouter />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/catalog" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
 
         {}
         <Route path="/login" element={<Login />} />

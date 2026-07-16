@@ -23,6 +23,35 @@ const Home = () => {
     const [about, setAbout] = useState('');
     const [logoUrl, setLogoUrl] = useState('');
 
+    const [contactName, setContactName] = useState('');
+    const [contactEmail, setContactEmail] = useState('');
+    const [contactMessage, setContactMessage] = useState('');
+    const [contactSuccess, setContactSuccess] = useState(false);
+
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    const isLoggedIn = !!(token && user);
+
+    const handleScroll = (e, id) => {
+        e.preventDefault();
+        const element = document.getElementById(id);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
+    const handleContactSubmit = (e) => {
+        e.preventDefault();
+        if (!contactName || !contactEmail || !contactMessage) return;
+        setContactSuccess(true);
+        setTimeout(() => {
+            setContactSuccess(false);
+            setContactName('');
+            setContactEmail('');
+            setContactMessage('');
+        }, 5000);
+    };
+
     const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:5005'
         : 'https://rootwebcore-backend.onrender.com';
@@ -114,7 +143,7 @@ const Home = () => {
             {}
             <header className="bg-white/80 backdrop-blur-md sticky top-0 z-40 py-4 px-6 border-b border-slate-200/60 shadow-sm">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/20">
                             A
                         </div>
@@ -124,6 +153,12 @@ const Home = () => {
                         </div>
                     </div>
 
+                    <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-500">
+                        <a href="#home" onClick={(e) => handleScroll(e, 'home')} className="hover:text-indigo-600 transition-colors">Anasayfa</a>
+                        <a href="#about" onClick={(e) => handleScroll(e, 'about')} className="hover:text-indigo-600 transition-colors">Hakkımızda</a>
+                        <a href="#contact" onClick={(e) => handleScroll(e, 'contact')} className="hover:text-indigo-600 transition-colors">İletişim</a>
+                    </nav>
+
                     <div className="flex items-center gap-4 text-xs font-bold">
                         <button 
                             type="button"
@@ -132,19 +167,34 @@ const Home = () => {
                         >
                             <Globe size={13} /> {language}
                         </button>
-                        <Link to="/login" className="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all cursor-pointer">{t('home_btn_login')}</Link>
-                        <button 
-                            onClick={() => { setIsWizardOpen(true); setStep(1); }}
-                            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/10 transition-all cursor-pointer"
-                        >
-                            {t('home_btn_start').replace(' ➔', '')}
-                        </button>
+                        {isLoggedIn ? (
+                            <>
+                                <Link to="/catalog" className="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all cursor-pointer">Katalog</Link>
+                                <Link to="/quotes" className="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all cursor-pointer">Tekliflerim</Link>
+                                <button 
+                                    onClick={() => navigate('/catalog')}
+                                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/10 transition-all cursor-pointer"
+                                >
+                                    Teklif Verin
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <Link to="/login" className="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all cursor-pointer">{t('home_btn_login')}</Link>
+                                <button 
+                                    onClick={() => { setIsWizardOpen(true); setStep(1); }}
+                                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/10 transition-all cursor-pointer"
+                                >
+                                    {t('home_btn_start').replace(' ➔', '')}
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
             </header>
 
             {}
-            <section className="py-16 px-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <section id="home" className="py-16 px-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <div className="space-y-6 text-center lg:text-left">
                     <span className="px-3.5 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-wider border border-indigo-100 inline-block">
                         {t('home_hero_badge')}
@@ -157,18 +207,29 @@ const Home = () => {
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-                        <button 
-                            onClick={() => { setIsWizardOpen(true); setStep(1); }}
-                            className="w-full sm:w-auto px-8 py-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-                        >
-                            {t('home_btn_start')}
-                        </button>
-                        <Link 
-                            to="/login"
-                            className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-black text-xs uppercase tracking-widest transition-all text-center"
-                        >
-                            {t('home_btn_login')}
-                        </Link>
+                        {isLoggedIn ? (
+                            <button 
+                                onClick={() => navigate('/catalog')}
+                                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                            >
+                                İhtiyaç Duyduğunuz Ürüne Teklif Verin
+                            </button>
+                        ) : (
+                            <>
+                                <button 
+                                    onClick={() => { setIsWizardOpen(true); setStep(1); }}
+                                    className="w-full sm:w-auto px-8 py-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                                >
+                                    {t('home_btn_start')}
+                                </button>
+                                <Link 
+                                    to="/login"
+                                    className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-black text-xs uppercase tracking-widest transition-all text-center"
+                                >
+                                    {t('home_btn_login')}
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -267,6 +328,170 @@ const Home = () => {
                                 {language === 'TR' ? 'Komisyon ödemeden, kendi sunucunuzda bağımsız ticaret özgürlüğü.' : 'Trade freely on your own server without paying commission fees.'}
                             </p>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="about" className="py-20 bg-white border-t border-slate-200/60 px-6">
+                <div className="max-w-7xl mx-auto w-full space-y-16">
+                    <div className="text-center max-w-2xl mx-auto space-y-3">
+                        <span className="px-3.5 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-wider border border-indigo-100 inline-block">
+                            Hakkımızda
+                        </span>
+                        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                            Değerlerimiz ve B2B Vizyonumuz
+                        </h2>
+                        <p className="text-slate-500 text-sm font-semibold leading-relaxed">
+                            Mobilya sektöründeki üretici ve alıcıları tek bir çatı altında toplayarak, küresel ticareti kolaylaştırıyoruz.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
+                        <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
+                            <div className="text-3xl font-black text-indigo-600 mb-1">10K+</div>
+                            <div className="text-xs font-bold text-slate-700 uppercase tracking-wide">Aktif Alıcı</div>
+                        </div>
+                        <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
+                            <div className="text-3xl font-black text-indigo-600 mb-1">500+</div>
+                            <div className="text-xs font-bold text-slate-700 uppercase tracking-wide">Üretici Firma</div>
+                        </div>
+                        <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
+                            <div className="text-3xl font-black text-indigo-600 mb-1">100K+</div>
+                            <div className="text-xs font-bold text-slate-700 uppercase tracking-wide">Yıllık Teklif</div>
+                        </div>
+                        <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
+                            <div className="text-3xl font-black text-indigo-600 mb-1">0%</div>
+                            <div className="text-xs font-bold text-slate-700 uppercase tracking-wide">Komisyon</div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-6">
+                        <div className="p-8 rounded-3xl border border-slate-200/65 bg-white space-y-4 hover:shadow-lg transition-shadow">
+                            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">🎯</div>
+                            <h3 className="text-base font-black text-slate-900">Vizyonumuz</h3>
+                            <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                                Geleneksel mobilya tedarik süreçlerini dijitalleştirerek, sınırları ortadan kaldıran şeffaf bir ticaret ağı inşa etmek.
+                            </p>
+                        </div>
+                        <div className="p-8 rounded-3xl border border-slate-200/65 bg-white space-y-4 hover:shadow-lg transition-shadow">
+                            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">🚀</div>
+                            <h3 className="text-base font-black text-slate-900">Misyonumuz</h3>
+                            <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                                Üreticilerin doğrudan alıcılara ulaşmasını sağlayarak maliyetleri düşürmek ve ticaret hacmini artıracak yenilikçi araçlar sunmak.
+                            </p>
+                        </div>
+                        <div className="p-8 rounded-3xl border border-slate-200/65 bg-white space-y-4 hover:shadow-lg transition-shadow">
+                            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">🛡️</div>
+                            <h3 className="text-base font-black text-slate-900">Değerlerimiz</h3>
+                            <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                                Güven, şeffaflık ve adil ticaret ilkelerine bağlı kalarak, tüm üyelerimizin sürdürülebilir büyümesine katkıda bulunmak.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="contact" className="py-20 bg-slate-50 border-t border-slate-200/60 px-6">
+                <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <div className="space-y-8">
+                        <div className="space-y-3">
+                            <span className="px-3.5 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-wider border border-indigo-100 inline-block">
+                                İletişim
+                            </span>
+                            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                                Bizimle İletişime Geçin
+                            </h2>
+                            <p className="text-slate-500 text-sm font-semibold leading-relaxed">
+                                Sorularınız, iş birliği talepleriniz veya teknik destek için ekibimizle dilediğiniz zaman iletişime geçebilirsiniz.
+                            </p>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                                <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                                    <Mail size={18} />
+                                </div>
+                                <div>
+                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">E-Posta</h4>
+                                    <p className="text-xs font-black text-slate-900">destek@apexb2b.com</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                                <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                                    <Phone size={18} />
+                                </div>
+                                <div>
+                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Telefon</h4>
+                                    <p className="text-xs font-black text-slate-900">+90 (212) 555 0199</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                                <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                                    <Briefcase size={18} />
+                                </div>
+                                <div>
+                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Merkez Ofis Koordinatları</h4>
+                                    <p className="text-xs font-black text-slate-900">41.0082° N, 28.9784° E (İstanbul, Türkiye)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
+                        <h3 className="text-base font-black text-slate-900">Mesaj Gönderin</h3>
+                        
+                        {contactSuccess && (
+                            <div className="p-4 rounded-xl bg-green-50 border border-green-100 text-green-700 text-xs font-bold text-center">
+                                Mesajınız başarıyla iletildi! En kısa sürede dönüş sağlayacağız.
+                            </div>
+                        )}
+
+                        <form onSubmit={handleContactSubmit} className="space-y-4 text-xs font-semibold">
+                            <div className="space-y-1.5">
+                                <label className="block text-slate-500 font-bold">Ad Soyad</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={contactName}
+                                    onChange={e => setContactName(e.target.value)}
+                                    placeholder="Örn: Mehmet Yılmaz"
+                                    className="w-full py-3 px-4 rounded-xl premium-input text-xs"
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="block text-slate-500 font-bold">E-Posta Adresi</label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={contactEmail}
+                                    onChange={e => setContactEmail(e.target.value)}
+                                    placeholder="iletisim@firma.com"
+                                    className="w-full py-3 px-4 rounded-xl premium-input text-xs"
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="block text-slate-500 font-bold">Mesajınız</label>
+                                <textarea
+                                    rows="4"
+                                    required
+                                    value={contactMessage}
+                                    onChange={e => setContactMessage(e.target.value)}
+                                    placeholder="Sorunuzu veya talebinizi detaylıca buraya yazın..."
+                                    className="w-full py-3 px-4 rounded-xl premium-input text-xs leading-relaxed"
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-indigo-600/10 cursor-pointer transition-all flex items-center justify-center gap-1.5"
+                            >
+                                Gönder
+                            </button>
+                        </form>
                     </div>
                 </div>
             </section>

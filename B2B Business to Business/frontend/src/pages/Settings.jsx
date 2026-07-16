@@ -558,7 +558,7 @@ const Settings = () => {
             {}
             <header className="bg-white/80 backdrop-blur-md sticky top-0 z-40 py-4 px-6 border-b border-slate-200/60 shadow-sm">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <Link to="/" className="flex items-center gap-3">
+                    <Link to="/catalog" className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/20">
                             A
                         </div>
@@ -576,10 +576,10 @@ const Settings = () => {
                         >
                             <Globe size={13} /> {language}
                         </button>
-                        <Link to="/" className="text-slate-500 hover:text-indigo-600 transition-all cursor-pointer">{t('catalog')}</Link>
+                        <Link to="/catalog" className="text-slate-500 hover:text-indigo-600 transition-all cursor-pointer">{t('catalog')}</Link>
                         <Link to="/quotes" className="text-slate-500 hover:text-indigo-600 transition-all cursor-pointer">{t('my_quotes')}</Link>
                         <button 
-                            onClick={() => { navigate('/'); setTimeout(() => window.dispatchEvent(new Event('start_tour')), 300); }}
+                            onClick={() => { localStorage.setItem('apex_show_onboarding', 'true'); navigate('/catalog'); }}
                             className="p-1.5 rounded-xl border border-slate-200 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-all cursor-pointer"
                             title={language === 'TR' ? 'Rehberi Başlat' : 'Start Guide'}
                         >
@@ -604,7 +604,7 @@ const Settings = () => {
                             </div>
                         </Link>
                         <button 
-                            onClick={() => { localStorage.clear(); navigate('/login'); }}
+                            onClick={() => { localStorage.clear(); navigate('/'); }}
                             className="p-1.5 rounded-xl border border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
                             title={language === 'TR' ? 'Çıkış Yap' : 'Log Out'}
                         >
@@ -617,7 +617,7 @@ const Settings = () => {
             {}
             <main className="flex-grow max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
 
-                <button onClick={() => navigate('/')} className="text-xs text-indigo-600 hover:underline font-bold flex items-center gap-1.5 self-start">
+                <button onClick={() => navigate('/catalog')} className="text-xs text-indigo-600 hover:underline font-bold flex items-center gap-1.5 self-start">
                     <ArrowLeft size={14} /> {t('back_to_catalog')}
                 </button>
 

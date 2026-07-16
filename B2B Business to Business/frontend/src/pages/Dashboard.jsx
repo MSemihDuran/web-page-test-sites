@@ -100,7 +100,7 @@ const Dashboard = () => {
 
     const handleLogout = () => {
         localStorage.clear();
-        navigate('/login');
+        navigate('/');
     };
 
     const handleAddColor = () => {
@@ -286,6 +286,8 @@ const Dashboard = () => {
     };
 
     const restartOnboarding = () => {
+        localStorage.setItem('apex_show_onboarding', 'true');
+        navigate('/catalog');
         setIsOnboardingActive(true);
         setOnboardingStep(1);
     };
@@ -316,7 +318,7 @@ const Dashboard = () => {
                     : 'z-40'
             }`}>
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/catalog')}>
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/20">
                             A
                         </div>
@@ -334,7 +336,7 @@ const Dashboard = () => {
                         >
                             <Globe size={13} /> {language}
                         </button>
-                        <Link to="/" className="text-indigo-600 border-b-2 border-indigo-600 pb-0.5 transition-all">{t('catalog')}</Link>
+                        <Link to="/catalog" className="text-indigo-600 border-b-2 border-indigo-600 pb-0.5 transition-all">{t('catalog')}</Link>
                         <Link to="/quotes" className="text-slate-500 hover:text-indigo-600 transition-all">{t('my_quotes')}</Link>
 
                         <button 
