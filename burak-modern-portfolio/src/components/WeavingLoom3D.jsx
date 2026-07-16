@@ -77,7 +77,8 @@ export default function WeavingLoom3D({
     floorHelper.material.transparent = true;
     scene.add(floorHelper);
 
-    // 3.2 Workshop Structural Columns & Crossbeams
+    // 3.2 Workshop Structural Columns & Crossbeams (Commented out to remove blocking pillars in scene)
+    /*
     const pillarGeo = new THREE.BoxGeometry(0.3, 10, 0.3);
     const pillarMat = new THREE.MeshStandardMaterial({ 
       color: 0x0a0e1a, 
@@ -116,6 +117,7 @@ export default function WeavingLoom3D({
       beam.position.set(0, 9.5, zVal);
       scene.add(beam);
     }
+    */
 
     // 3.3 Volumetric Light Beams (Ceiling spotlights shining down)
     const coneGeo = new THREE.ConeGeometry(2.2, 9, 32, 1, true);
