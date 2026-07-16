@@ -2,12 +2,11 @@
 # To deploy, go to Render dashboard -> Blueprints -> New Blueprint Instance -> Select repository.
 
 services:
-  - type: web
+  - type: static
     name: burak-tekstil-3d
-    env: static
-    rootDirectory: burak-modern-portfolio
+    rootDir: burak-modern-portfolio
     buildCommand: npm install && npm run build
-    publishDir: dist
+    staticPublishPath: dist
     routes:
       - type: rewrite
         source: /*
