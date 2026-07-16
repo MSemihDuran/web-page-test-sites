@@ -848,9 +848,9 @@ export default function WeavingLoom3D({
       activeWeftMat.dispose();
       
       // Background cleanups
-      pillarGeo.dispose();
-      pillarMat.dispose();
-      beamGeo.dispose();
+      // pillarGeo.dispose();
+      // pillarMat.dispose();
+      // beamGeo.dispose();
       vBarGeo.dispose();
       hBarGeo.dispose();
       creelFrameMat.dispose();
@@ -858,8 +858,8 @@ export default function WeavingLoom3D({
       otherLoomGeo.dispose();
       otherLoomMat.dispose();
       floorHelper.dispose();
-      ledLineGeo.dispose();
-      ledLineMat.dispose();
+      // ledLineGeo.dispose();
+      // ledLineMat.dispose();
       coneGeo.dispose();
       coneMat.dispose();
 

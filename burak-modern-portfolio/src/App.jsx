@@ -15,6 +15,7 @@ import {
   FiMenu,
   FiX
 } from 'react-icons/fi';
+import { FaWhatsapp } from 'react-icons/fa';
 import WeavingLoom3D from './components/WeavingLoom3D';
 
 export default function App() {
@@ -29,6 +30,203 @@ export default function App() {
   // Scroll tracking state
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState('hero');
+
+  // Secure Form State
+  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+  const [honeypot, setHoneypot] = useState('');
+  const [formErrors, setFormErrors] = useState({});
+  const [submitStatus, setSubmitStatus] = useState('idle'); // 'idle' | 'submitting' | 'success' | 'error'
+  const [statusMessage, setStatusMessage] = useState('');
+  
+  // Math CAPTCHA
+  const [captcha, setCaptcha] = useState({ num1: 0, num2: 0, sum: 0 });
+  const [userCaptcha, setUserCaptcha] = useState('');
+
+  const generateCaptcha = () => {
+    const num1 = Math.floor(Math.random() * 8) + 2; // 2-9
+    const num2 = Math.floor(Math.random() * 8) + 2; // 2-9
+    setCaptcha({ num1, num2, sum: num1 + num2 });
+    setUserCaptcha('');
+  };
+
+  useEffect(() => {
+    generateCaptcha();
+  }, []);
+
+  // Disable Right-Click and DevTools shortcuts to protect source code
+  useEffect(() => {
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+    };
+    
+    const handleKeyDown = (e) => {
+      // F12 key
+      if (e.keyCode === 123) {
+        e.preventDefault();
+      }
+      // Ctrl+Shift+I (Inspect)
+      if (e.ctrlKey && e.shiftKey && e.keyCode === 73) {
+        e.preventDefault();
+      }
+      // Ctrl+Shift+J (Console)
+      if (e.ctrlKey && e.shiftKey && e.keyCode === 74) {
+        e.preventDefault();
+      }
+      // Ctrl+U (View Source)
+      if (e.ctrlKey && e.keyCode === 85) {
+        e.preventDefault();
+      }
+      // Ctrl+Shift+C (Element Selector)
+      if (e.ctrlKey && e.shiftKey && e.keyCode === 67) {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener('contextmenu', handleContextMenu);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('contextmenu', handleContextMenu);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const hasProfanity = (text) => {
+    if (!text) return false;
+    const blacklist = [
+      'amk', 'aq', 'pic', 'got', 'orospu', 'yavsak', 'ibne', 'serefsiz', 
+      'amcik', 'gerizekali', 'pezevenk', 'gavat', 'kahpe', 'siktir', 'yarrak'
+    ];
+    
+    const normalized = text.toLowerCase()
+      .replace(/ı/g, 'i')
+      .replace(/ğ/g, 'g')
+      .replace(/ü/g, 'u')
+      .replace(/ş/g, 's')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c');
+      
+    const words = normalized.split(/[\s,.\-_!?]+/);
+    return words.some(w => blacklist.includes(w) || blacklist.some(b => w === b + 'lar' || w === b + 'ler' || w === b + 'si' || w === b + 'yi' || w === b + 'ye'));
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.name.trim()) {
+      errors.name = 'Adınız soyadınız gereklidir.';
+    } else if (formData.name.trim().length < 2) {
+      errors.name = 'Adınız en az 2 karakter olmalıdır.';
+    } else if (hasProfanity(formData.name)) {
+      errors.name = 'Adınız uygunsuz içerik içeremez.';
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = 'E-posta adresiniz gereklidir.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Geçerli bir e-posta adresi giriniz.';
+    }
+
+    if (!formData.subject.trim()) {
+      errors.subject = 'Konu alanı gereklidir.';
+    } else if (hasProfanity(formData.subject)) {
+      errors.subject = 'Konu uygunsuz içerik içeremez.';
+    }
+
+    if (!formData.message.trim()) {
+      errors.message = 'Mesajınız gereklidir.';
+    } else if (formData.message.trim().length < 10) {
+      errors.message = 'Mesajınız en az 10 karakter olmalıdır.';
+    } else if (hasProfanity(formData.message)) {
+      errors.message = 'Mesajınız uygunsuz veya argo içerik barındıramez.';
+    }
+
+    if (!userCaptcha) {
+      errors.captcha = 'Lütfen güvenlik sorusunu yanıtlayın.';
+    } else if (parseInt(userCaptcha, 10) !== captcha.sum) {
+      errors.captcha = 'Güvenlik sorusu cevabı yanlış.';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    // Honeypot spam check (silent discard/mock success for bots)
+    if (honeypot) {
+      setSubmitStatus('success');
+      setStatusMessage('Talebiniz başarıyla alınmıştır.');
+      return;
+    }
+
+    setSubmitStatus('submitting');
+
+    // EmailJS API Integration settings
+    // Fill in actual EmailJS keys to enable real email forwarding
+    const EMAIL_CONFIG = {
+      serviceId: 'YOUR_EMAILJS_SERVICE_ID', // Örn: 'service_xxxxxx'
+      templateId: 'YOUR_EMAILJS_TEMPLATE_ID', // Örn: 'template_xxxxxx'
+      publicKey: 'YOUR_EMAILJS_PUBLIC_KEY', // Örn: 'user_xxxxxxxx'
+      toEmail: 'bilgi@buraktekstil.com'
+    };
+
+    // If config keys are still placeholders, show dynamic simulation success
+    if (EMAIL_CONFIG.serviceId === 'YOUR_EMAILJS_SERVICE_ID' || !EMAIL_CONFIG.publicKey) {
+      setTimeout(() => {
+        setSubmitStatus('success');
+        setStatusMessage('Talebiniz başarıyla oluşturuldu! (E-posta gönderimi simüle edildi. Gerçek gönderim için lütfen EmailJS API anahtarlarınızı giriniz)');
+        setFormData({ name: '', email: '', subject: '', message: '' });
+        setUserCaptcha('');
+        generateCaptcha();
+      }, 1500);
+      return;
+    }
+
+    try {
+      const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          service_id: EMAIL_CONFIG.serviceId,
+          template_id: EMAIL_CONFIG.templateId,
+          user_id: EMAIL_CONFIG.publicKey,
+          template_params: {
+            from_name: formData.name,
+            from_email: formData.email,
+            subject: formData.subject,
+            message: formData.message,
+            to_email: EMAIL_CONFIG.toEmail
+          }
+        })
+      });
+
+      if (response.ok) {
+        setSubmitStatus('success');
+        setStatusMessage('Talebiniz başarıyla e-posta olarak gönderildi!');
+        setFormData({ name: '', email: '', subject: '', message: '' });
+        setUserCaptcha('');
+        generateCaptcha();
+      } else {
+        throw new Error('Email sending failed');
+      }
+    } catch (error) {
+      console.error(error);
+      setSubmitStatus('error');
+      setStatusMessage('Gönderim esnasında bir hata oluştu. Lütfen tekrar deneyiniz.');
+    }
+  };
 
   // Monitor scroll height and update progress
   useEffect(() => {
@@ -139,18 +337,18 @@ export default function App() {
         initial={{ y: -60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed top-6 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl bg-brand-bg/30 border border-white/[0.05] backdrop-blur-xl rounded-full py-2.5 px-6 z-50 flex justify-between items-center shadow-[0_20px_50px_rgba(4,5,13,0.9)]"
+        className="fixed top-4 md:top-6 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl bg-brand-bg/30 border border-white/[0.05] backdrop-blur-xl rounded-full py-2 px-4 md:py-2.5 md:px-6 z-50 flex justify-between items-center shadow-[0_20px_50px_rgba(4,5,13,0.95)]"
       >
         <span 
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
           className="font-outfit font-extrabold text-lg tracking-wider text-white flex items-center gap-3 cursor-pointer group"
         >
-          {/* logo.png cropped and enlarged to w-12 h-12, vertically shifted slightly down (top-[53.5%]) to compensate for asset asymmetry */}
-          <div className="relative w-12 h-12 overflow-hidden flex items-center justify-center">
+          {/* logo.png centered precisely to prevent clipping */}
+          <div className="relative w-10 h-10 md:w-12 md:h-12 overflow-hidden flex items-center justify-center">
             <img 
               src="./logo.png" 
               alt="Burak Tekstil Logo" 
-              className="w-[155px] h-[155px] max-w-none absolute left-1/2 top-[53.5%] -translate-x-1/2 -translate-y-1/2 object-contain transition-transform duration-500 group-hover:scale-[1.08]" 
+              className="w-[80px] h-[45px] md:w-[96px] md:h-[54px] max-w-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-contain transition-transform duration-500 group-hover:scale-[1.08]" 
             />
           </div>
           <span className="hidden sm:inline font-syne text-glow-white ml-1 text-base tracking-wide">
@@ -193,24 +391,24 @@ export default function App() {
         </nav>
 
         {/* Active Loom State Badge */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           <div className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-navy/60 border border-brand-gold/20 text-xxs font-mono text-slate-200">
             <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
             TEZGAH: {isPlaying ? `${rpm} RPM` : 'DURDURULDU'}
           </div>
           <button 
             onClick={() => scrollToSection('contact')}
-            className="bg-brand-gold hover:bg-brand-gold-glow text-brand-bg font-extrabold text-xxs tracking-widest uppercase py-2 px-5 rounded-full transition-all duration-300 shadow-[0_4px_15px_rgba(197,160,89,0.25)] hover:shadow-[0_4px_25px_rgba(197,160,89,0.45)] hover:scale-105"
+            className="bg-brand-gold hover:bg-brand-gold-glow text-brand-bg font-extrabold text-[10px] md:text-xxs tracking-widest uppercase py-1.5 px-3.5 md:py-2 md:px-5 rounded-full transition-all duration-300 shadow-[0_4px_15px_rgba(197,160,89,0.25)] hover:shadow-[0_4px_25px_rgba(197,160,89,0.45)] hover:scale-105"
           >
             TEKLİF AL
           </button>
           
           <button 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden text-white hover:text-brand-gold p-2 transition-colors cursor-pointer"
+            className="md:hidden text-white hover:text-brand-gold p-1.5 transition-colors cursor-pointer flex items-center justify-center"
             aria-label="Menü"
           >
-            {isMobileMenuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
+            {isMobileMenuOpen ? <FiX size={22} /> : <FiMenu size={22} />}
           </button>
         </div>
       </motion.header>
@@ -223,7 +421,7 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="fixed top-24 left-[2.5%] w-[95%] bg-brand-bg/95 border border-white/[0.08] backdrop-blur-2xl rounded-3xl p-6 z-40 md:hidden shadow-[0_20px_50px_rgba(4,5,13,0.95)] flex flex-col gap-4"
+            className="fixed top-20 md:top-24 left-[2.5%] w-[95%] bg-brand-bg/95 border border-white/[0.08] backdrop-blur-2xl rounded-3xl p-6 z-40 md:hidden shadow-[0_20px_50px_rgba(4,5,13,0.95)] flex flex-col gap-4"
           >
             {[
               { id: 'hero', label: 'Ana Sayfa' },
@@ -268,12 +466,12 @@ export default function App() {
               onClick={() => scrollToSection('about')}
             >
               <div className="absolute inset-0 bg-brand-gold/15 rounded-3xl blur-2xl group-hover:bg-brand-gold/25 transition-all duration-500" />
-              {/* Rounded square container with logo centered precisely (top-[54.5%] compensates for the asset's empty bottom padding) */}
+              {/* Rounded square container with logo centered precisely to prevent clipping */}
               <div className="relative w-28 h-28 rounded-3xl bg-brand-navy/30 flex items-center justify-center border border-brand-gold/30 shadow-[0_15px_30px_rgba(0,0,0,0.5)] overflow-hidden">
                 <img 
                   src="./logo.png" 
                   alt="Burak Tekstil Logo" 
-                  className="w-[340px] h-[340px] max-w-none absolute left-1/2 top-[54.5%] -translate-x-1/2 -translate-y-1/2 object-contain transition-transform duration-500 group-hover:scale-[1.08]" 
+                  className="w-[180px] h-[102px] max-w-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-contain transition-transform duration-500 group-hover:scale-[1.08]" 
                 />
               </div>
             </motion.div>
@@ -453,13 +651,13 @@ export default function App() {
                   }`}
                 >
                   {isPlaying ? (
-                    <>
-                      <FiPause /> DURAKLAT
-                    </>
+                    <span className="flex items-center gap-1.5">
+                      <FiPause /> <span>DURAKLAT</span>
+                    </span>
                   ) : (
-                    <>
-                      <FiPlay /> ÇALIŞTIR
-                    </>
+                    <span className="flex items-center gap-1.5">
+                      <FiPlay /> <span>ÇALIŞTIR</span>
+                    </span>
                   )}
                 </button>
               </div>
@@ -599,7 +797,20 @@ export default function App() {
                 </div>
                 <div className="flex items-start gap-3 text-xs text-slate-300">
                   <FiMapPin className="text-brand-gold text-sm shrink-0 mt-0.5" />
-                  <span>Organize Sanayi Bölgesi, 4. Cadde No:12, İstanbul, Türkiye</span>
+                  <span>Topçular, Tikveşli Sk. No:9, 34055 Eyüpsultan/İstanbul</span>
+                </div>
+
+                {/* Secure WhatsApp Direct Contact Link */}
+                <div className="pt-2">
+                  <a 
+                    href="https://wa.me/902125554433?text=Merhaba,%20Burak%20Tekstil%20hizmetleri%20hakkında%20bilgi%20almak%20istiyorum." 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xxs tracking-widest uppercase py-3.5 px-6 rounded-xl transition-all duration-300 shadow-[0_4px_15px_rgba(16,185,129,0.2)] hover:shadow-[0_4px_25px_rgba(16,185,129,0.35)] hover:scale-[1.02]"
+                  >
+                    <FaWhatsapp size={14} className="shrink-0" />
+                    WHATSAPP İLE TEKLİF AL
+                  </a>
                 </div>
               </div>
             </div>
@@ -607,23 +818,58 @@ export default function App() {
             {/* Form Panel */}
             <div className="md:col-span-7 p-8 rounded-3xl glass-panel relative flex flex-col justify-center">
               <h3 className="text-lg font-outfit font-extrabold text-white mb-6">Hızlı İletişim Formu</h3>
-              <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+              
+              {submitStatus === 'success' && (
+                <div className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex flex-col gap-1.5 shadow-[0_0_15px_rgba(16,185,129,0.1)] animate-pulse">
+                  <span className="font-bold">✓ İşlem Başarılı</span>
+                  <span>{statusMessage}</span>
+                </div>
+              )}
+
+              {submitStatus === 'error' && (
+                <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex flex-col gap-1.5 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+                  <span className="font-bold">✗ Hata Oluştu</span>
+                  <span>{statusMessage}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleFormSubmit} className="space-y-4">
+                {/* Honeypot spam prevention field */}
+                <div className="hidden" aria-hidden="true">
+                  <input 
+                    type="text" 
+                    name="website" 
+                    value={honeypot} 
+                    onChange={(e) => setHoneypot(e.target.value)} 
+                    tabIndex="-1" 
+                    autoComplete="off" 
+                  />
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xxs font-mono uppercase tracking-wider text-slate-400 mb-1">ADINIZ</label>
+                    <label className="block text-xxs font-mono uppercase tracking-wider text-slate-400 mb-1">ADINIZ SOYADINIZ</label>
                     <input 
                       type="text" 
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
                       placeholder="Burak Bey" 
-                      className="w-full bg-brand-navy/35 border border-white/[0.05] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-brand-gold/50 transition-colors"
+                      className={`w-full bg-brand-navy/35 border ${formErrors.name ? 'border-rose-500/50 focus:border-rose-500' : 'border-white/[0.05] focus:border-brand-gold/50'} rounded-xl px-4 py-3 text-xs text-white focus:outline-none transition-colors`}
                     />
+                    {formErrors.name && <span className="text-rose-500 text-xxs mt-1 block font-mono">{formErrors.name}</span>}
                   </div>
                   <div>
-                    <label className="block text-xxs font-mono uppercase tracking-wider text-slate-400 mb-1">E-POSTA</label>
+                    <label className="block text-xxs font-mono uppercase tracking-wider text-slate-400 mb-1">E-POSTA ADRESİNİZ</label>
                     <input 
                       type="email" 
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
                       placeholder="ad@firma.com" 
-                      className="w-full bg-brand-navy/35 border border-white/[0.05] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-brand-gold/50 transition-colors"
+                      className={`w-full bg-brand-navy/35 border ${formErrors.email ? 'border-rose-500/50 focus:border-rose-500' : 'border-white/[0.05] focus:border-brand-gold/50'} rounded-xl px-4 py-3 text-xs text-white focus:outline-none transition-colors`}
                     />
+                    {formErrors.email && <span className="text-rose-500 text-xxs mt-1 block font-mono">{formErrors.email}</span>}
                   </div>
                 </div>
 
@@ -631,25 +877,59 @@ export default function App() {
                   <label className="block text-xxs font-mono uppercase tracking-wider text-slate-400 mb-1">KONU</label>
                   <input 
                     type="text" 
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleInputChange}
                     placeholder="Fason Dokuma Talebi" 
-                    className="w-full bg-brand-navy/35 border border-white/[0.05] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-brand-gold/50 transition-colors"
+                    className={`w-full bg-brand-navy/35 border ${formErrors.subject ? 'border-rose-500/50 focus:border-rose-500' : 'border-white/[0.05] focus:border-brand-gold/50'} rounded-xl px-4 py-3 text-xs text-white focus:outline-none transition-colors`}
                   />
+                  {formErrors.subject && <span className="text-rose-500 text-xxs mt-1 block font-mono">{formErrors.subject}</span>}
                 </div>
 
                 <div>
                   <label className="block text-xxs font-mono uppercase tracking-wider text-slate-400 mb-1">MESAJINIZ</label>
                   <textarea 
                     rows="3" 
+                    name="message"
+                    value={formData.message}
+                    onChange={handleInputChange}
                     placeholder="İplik cinsi, talep edilen örgü stili ve metraj bilgisi girebilirsiniz..."
-                    className="w-full bg-brand-navy/35 border border-white/[0.05] rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-brand-gold/50 transition-colors resize-none"
+                    className={`w-full bg-brand-navy/35 border ${formErrors.message ? 'border-rose-500/50 focus:border-rose-500' : 'border-white/[0.05] focus:border-brand-gold/50'} rounded-xl px-4 py-3 text-xs text-white focus:outline-none transition-colors resize-none`}
                   />
+                  {formErrors.message && <span className="text-rose-500 text-xxs mt-1 block font-mono">{formErrors.message}</span>}
+                </div>
+
+                {/* Math CAPTCHA security challenge */}
+                <div>
+                  <label className="block text-xxs font-mono uppercase tracking-wider text-slate-400 mb-1">
+                    GÜVENLİK DOĞRULAMASI (Lütfen Toplamı Giriniz)
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-mono bg-brand-navy/60 border border-white/[0.08] px-4 py-3 rounded-xl text-brand-gold font-bold shrink-0 select-none">
+                      {captcha.num1} + {captcha.num2} =
+                    </span>
+                    <input 
+                      type="text" 
+                      value={userCaptcha}
+                      onChange={(e) => {
+                        setUserCaptcha(e.target.value);
+                        if (formErrors.captcha) {
+                          setFormErrors(prev => ({ ...prev, captcha: '' }));
+                        }
+                      }}
+                      placeholder="Cevap" 
+                      className={`w-28 bg-brand-navy/35 border ${formErrors.captcha ? 'border-rose-500/50 focus:border-rose-500' : 'border-white/[0.05] focus:border-brand-gold/50'} rounded-xl px-4 py-3 text-xs text-white focus:outline-none transition-colors`}
+                    />
+                  </div>
+                  {formErrors.captcha && <span className="text-rose-500 text-xxs mt-1 block font-mono">{formErrors.captcha}</span>}
                 </div>
 
                 <button 
                   type="submit"
-                  className="w-full bg-fluid-gold text-brand-bg font-extrabold text-xxs tracking-widest uppercase py-3.5 px-6 rounded-xl hover:scale-[1.01] transition-transform duration-300 shadow-[0_4px_15px_rgba(197,160,89,0.3)]"
+                  disabled={submitStatus === 'submitting'}
+                  className="w-full bg-fluid-gold text-brand-bg font-extrabold text-xxs tracking-widest uppercase py-3.5 px-6 rounded-xl hover:scale-[1.01] transition-transform duration-300 shadow-[0_4px_15px_rgba(197,160,89,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  TALEP OLUŞTUR
+                  {submitStatus === 'submitting' ? 'GÖNDERİLİYOR...' : 'TALEP OLUŞTUR / TEKLİF AL'}
                 </button>
               </form>
             </div>
@@ -663,12 +943,12 @@ export default function App() {
       <footer className="border-t border-white/[0.05] bg-[#020308] py-8 text-center text-slate-500 text-xxs font-mono relative z-10">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex flex-col md:flex-row items-center gap-4">
-            {/* Cropped footer logo */}
+            {/* Centered footer logo to prevent clipping */}
             <div className="relative w-8 h-8 overflow-hidden flex items-center justify-center">
               <img 
                 src="./logo.png" 
                 alt="Burak Tekstil Logo" 
-                className="w-[96px] h-[96px] max-w-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-contain" 
+                className="w-[60px] h-[34px] max-w-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-contain" 
               />
             </div>
             <span>© 2026 BURAK TEKSTİL. Tüm Hakları Saklıdır.</span>
