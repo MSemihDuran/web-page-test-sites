@@ -348,7 +348,7 @@ export default function App() {
             <img 
               src="./logo.png" 
               alt="Burak Tekstil Logo" 
-              className="w-[80px] h-[45px] md:w-[96px] md:h-[54px] max-w-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-contain transition-transform duration-500 group-hover:scale-[1.08]" 
+              className="w-[90px] h-[51px] md:w-[110px] md:h-[62px] max-w-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-contain transition-transform duration-500 group-hover:scale-[1.08]" 
             />
           </div>
           <span className="hidden sm:inline font-syne text-glow-white ml-1 text-base tracking-wide">
@@ -364,7 +364,7 @@ export default function App() {
             { id: 'tech', label: 'Hassasiyet' },
             { id: 'speed', label: 'Hız' },
             { id: 'quality', label: 'Kalite' },
-            { id: 'lab', label: 'Laboratuvar' }
+            { id: 'lab', label: 'Simülasyon' }
           ].map((item) => (
             <button 
               key={item.id}
@@ -429,7 +429,7 @@ export default function App() {
               { id: 'tech', label: 'Hassasiyet' },
               { id: 'speed', label: 'Hız' },
               { id: 'quality', label: 'Kalite' },
-              { id: 'lab', label: 'Laboratuvar' },
+              { id: 'lab', label: 'Simülasyon' },
               { id: 'contact', label: 'Teklif Al & İletişim' }
             ].map((item) => (
               <button 
@@ -471,7 +471,7 @@ export default function App() {
                 <img 
                   src="./logo.png" 
                   alt="Burak Tekstil Logo" 
-                  className="w-[180px] h-[102px] max-w-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-contain transition-transform duration-500 group-hover:scale-[1.08]" 
+                  className="w-[230px] h-[130px] max-w-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-contain transition-transform duration-500 group-hover:scale-[1.08]" 
                 />
               </div>
             </motion.div>
@@ -948,7 +948,7 @@ export default function App() {
               <img 
                 src="./logo.png" 
                 alt="Burak Tekstil Logo" 
-                className="w-[60px] h-[34px] max-w-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-contain" 
+                className="w-[70px] h-[40px] max-w-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-contain" 
               />
             </div>
             <span>© 2026 BURAK TEKSTİL. Tüm Hakları Saklıdır.</span>
