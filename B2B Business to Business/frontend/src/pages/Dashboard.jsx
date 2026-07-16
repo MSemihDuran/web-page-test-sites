@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Package, MessageSquare, ListCollapse, Plus, Search, Tag, ExternalLink, Shield, Trash2, LogOut, ChevronRight, HelpCircle, Sparkles, Globe } from 'lucide-react';
+import { Package, MessageSquare, ListCollapse, Plus, Search, Tag, ExternalLink, Shield, Trash2, LogOut, ChevronRight, HelpCircle, Sparkles, Globe, ShoppingCart, Trash } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 const Dashboard = () => {
     const navigate = useNavigate();
     const { language, changeLanguage, t } = useLanguage();
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState('');
+    const { user, token, logout } = useAuth();
     const [products, setProducts] = useState([]);
 
     const [searchQuery, setSearchQuery] = useState('');
@@ -27,6 +27,15 @@ const Dashboard = () => {
 
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [quoteNotes, setQuoteNotes] = useState('');
+    const [quoteQuantity, setQuoteQuantity] = useState(1);
+    const [quoteCurrency, setQuoteCurrency] = useState('TRY');
+    const [quoteVatRate, setQuoteVatRate] = useState(20.0);
+
+    const [basketItems, setBasketItems] = useState([]); 
+    const [isBasketOpen, setIsBasketOpen] = useState(false);
+    const [basketNotes, setBasketNotes] = useState('');
+    const [basketCurrency, setBasketCurrency] = useState('TRY');
+    const [basketVatRate, setBasketVatRate] = useState(20.0);
 
     const [isOnboardingActive, setIsOnboardingActive] = useState(false);
     const [onboardingStep, setOnboardingStep] = useState(1); 
@@ -36,16 +45,10 @@ const Dashboard = () => {
         : 'https://rootwebcore-backend.onrender.com';
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        const storedToken = localStorage.getItem('token');
-
-        if (!storedUser || !storedToken) {
-            navigate('/login');
-            return;
+        const savedBasket = localStorage.getItem('apex_rfq_basket');
+        if (savedBasket) {
+            setBasketItems(JSON.parse(savedBasket));
         }
-
-        setUser(JSON.parse(storedUser));
-        setToken(storedToken);
 
         const shouldShowOnboarding = localStorage.getItem('apex_show_onboarding');
         if (shouldShowOnboarding === 'true') {
@@ -53,7 +56,96 @@ const Dashboard = () => {
             setIsOnboardingActive(true);
             setOnboardingStep(1);
         }
-    }, [navigate]);
+    }, []);
+
+    const saveBasket = (newItems) => {
+        setBasketItems(newItems);
+        localStorage.setItem('apex_rfq_basket', JSON.stringify(newItems));
+    };
+
+    const addToBasket = (product, e) => {
+        if (e) e.stopPropagation();
+        
+        const existsIndex = basketItems.findIndex(item => item.product.id === product.id);
+        const defaultColor = product.colorImages && product.colorImages.length > 0
+            ? product.colorImages[0].color
+            : product.color || 'Varsayılan';
+
+        if (existsIndex > -1) {
+            const updated = [...basketItems];
+            updated[existsIndex].quantity += 1;
+            saveBasket(updated);
+        } else {
+            saveBasket([...basketItems, { product, quantity: 1, color: defaultColor }]);
+        }
+        setIsBasketOpen(true);
+    };
+
+    const removeFromBasket = (productId, e) => {
+        if (e) e.stopPropagation();
+        const updated = basketItems.filter(item => item.product.id !== productId);
+        saveBasket(updated);
+    };
+
+    const updateBasketQuantity = (productId, newQty) => {
+        if (newQty < 1) return;
+        const updated = basketItems.map(item => {
+            if (item.product.id === productId) {
+                return { ...item, quantity: Number(newQty) };
+            }
+            return item;
+        });
+        saveBasket(updated);
+    };
+
+    const updateBasketColor = (productId, color) => {
+        const updated = basketItems.map(item => {
+            if (item.product.id === productId) {
+                return { ...item, color };
+            }
+            return item;
+        });
+        saveBasket(updated);
+    };
+
+    const handleBatchQuoteSubmit = async (e) => {
+        e.preventDefault();
+        if (basketItems.length === 0) return;
+
+        const payload = {
+            items: basketItems.map(item => ({
+                productId: item.product.id,
+                quantity: item.quantity,
+                color: item.color
+            })),
+            notes: basketNotes,
+            currency: basketCurrency,
+            vatRate: Number(basketVatRate)
+        };
+
+        try {
+            const res = await fetch(`${API_BASE}/api/quotes/batch`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                alert(language === 'TR' ? 'Toplu teklif talepleriniz üreticilere iletildi!' : 'Batch quote requests submitted to manufacturers!');
+                saveBasket([]);
+                setBasketNotes('');
+                setIsBasketOpen(false);
+                navigate('/quotes');
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Teklif talepleri gönderilemedi.');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     const fetchProducts = async () => {
         if (!token) return;
@@ -318,7 +410,7 @@ const Dashboard = () => {
                     : 'z-40'
             }`}>
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/catalog')}>
+                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/20">
                             A
                         </div>
@@ -338,6 +430,20 @@ const Dashboard = () => {
                         </button>
                         <Link to="/catalog" className="text-indigo-600 border-b-2 border-indigo-600 pb-0.5 transition-all">{t('catalog')}</Link>
                         <Link to="/quotes" className="text-slate-500 hover:text-indigo-600 transition-all">{t('my_quotes')}</Link>
+                        {user.role === 'BUYER' && (
+                            <button
+                                onClick={() => setIsBasketOpen(true)}
+                                className="relative flex items-center gap-1 text-slate-500 hover:text-indigo-600 transition-all cursor-pointer font-bold border-none bg-none outline-none"
+                            >
+                                <ShoppingCart size={13} />
+                                <span>{language === 'TR' ? 'Sepetim' : 'Basket'}</span>
+                                {basketItems.length > 0 && (
+                                    <span className="bg-indigo-600 text-white text-[8px] font-black rounded-full w-4 h-4 flex items-center justify-center animate-pulse ml-0.5">
+                                        {basketItems.length}
+                                    </span>
+                                )}
+                            </button>
+                        )}
 
                         <button 
                             onClick={restartOnboarding}
@@ -538,15 +644,36 @@ const Dashboard = () => {
                                             <span>🎨 {p.color || 'N/A'}</span>
                                         </div>
 
-                                        <button 
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigate(`/products/${p.id}`);
-                                            }}
-                                            className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-wider shadow-md shadow-indigo-600/10 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
-                                        >
-                                            {language === 'TR' ? 'Detayları ve Renkleri İncele' : 'View Details & Colors'}
-                                        </button>
+                                        {user.role === 'BUYER' ? (
+                                            <div className="flex gap-2">
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        navigate(`/products/${p.id}`);
+                                                    }}
+                                                    className="flex-grow py-3 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer text-center"
+                                                >
+                                                    {language === 'TR' ? 'Detaylar' : 'Details'}
+                                                </button>
+                                                <button 
+                                                    onClick={(e) => addToBasket(p, e)}
+                                                    className="flex-grow py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-wider shadow-md shadow-indigo-600/10 transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-98"
+                                                >
+                                                    <ShoppingCart size={13} />
+                                                    {language === 'TR' ? 'Sepete' : 'Basket'}
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/products/${p.id}`);
+                                                }}
+                                                className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-wider shadow-md shadow-indigo-600/10 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
+                                            >
+                                                {language === 'TR' ? 'Detayları ve Renkleri İncele' : 'View Details & Colors'}
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -836,6 +963,149 @@ const Dashboard = () => {
                     </div>
                 </div>
             )}
+
+            {/* RFQ Basket Drawer */}
+            {isBasketOpen && (
+                <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex justify-end">
+                    <div className="bg-white w-full max-w-md h-full shadow-2xl flex flex-col justify-between p-6 sm:p-8 animate-[slideLeft_0.3s_ease-out] relative">
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-4">
+                            <div className="flex items-center gap-2">
+                                <ShoppingCart className="text-indigo-600" size={20} />
+                                <h2 className="text-lg font-black text-slate-900">
+                                    {language === 'TR' ? 'Teklif Sepetim' : 'RFQ Basket'}
+                                </h2>
+                            </div>
+                            <button 
+                                onClick={() => setIsBasketOpen(false)}
+                                className="text-slate-400 hover:text-slate-950 font-black text-xs cursor-pointer bg-slate-50 py-1 px-3 rounded-lg border border-slate-100"
+                            >
+                                {language === 'TR' ? 'Kapat X' : 'Close X'}
+                            </button>
+                        </div>
+
+                        {basketItems.length === 0 ? (
+                            <div className="flex-grow flex flex-col justify-center items-center text-center text-slate-400 text-xs font-semibold py-12">
+                                <ShoppingCart size={40} className="text-slate-300 mb-2" />
+                                {language === 'TR' ? 'Sepetiniz henüz boş. Kataloğumuzdan ürün ekleyin!' : 'Your basket is currently empty. Add products from the catalog!'}
+                            </div>
+                        ) : (
+                            <div className="flex-grow overflow-y-auto space-y-4 pr-1 flex flex-col justify-between">
+                                <div className="space-y-4 flex-grow overflow-y-auto pr-1 max-h-[50vh]">
+                                    {basketItems.map((item) => {
+                                        const colors = item.product.colorImages && item.product.colorImages.length > 0
+                                            ? [...new Set(item.product.colorImages.map(img => img.color))]
+                                            : [item.product.color || 'Varsayılan'];
+
+                                        return (
+                                            <div key={item.product.id} className="p-3 bg-slate-50 border border-slate-200/60 rounded-xl flex items-center gap-3 relative text-slate-800">
+                                                <div className="w-14 h-14 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
+                                                    <img src={item.product.imageUrl} className="w-full h-full object-cover" />
+                                                </div>
+                                                <div className="flex-grow min-w-0 text-xs">
+                                                    <h4 className="font-black text-slate-900 truncate">{item.product.title}</h4>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase truncate">{item.product.seller?.companyName}</p>
+                                                    
+                                                    {/* Variant selection */}
+                                                    <div className="mt-1.5 flex flex-wrap gap-1.5 items-center">
+                                                        <span className="text-[9px] text-slate-500 font-bold uppercase">{language === 'TR' ? 'Renk:' : 'Color:'}</span>
+                                                        <select
+                                                            value={item.color}
+                                                            onChange={(e) => updateBasketColor(item.product.id, e.target.value)}
+                                                            className="bg-white border border-slate-200 text-[10px] font-bold py-0.5 px-1 rounded cursor-pointer text-slate-800"
+                                                        >
+                                                            {colors.map((c, idx) => (
+                                                                <option key={idx} value={c}>{c}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Quantity adjustment */}
+                                                    <div className="mt-2 flex items-center gap-2">
+                                                        <span className="text-[9px] text-slate-500 font-bold uppercase">{language === 'TR' ? 'Adet:' : 'Qty:'}</span>
+                                                        <input 
+                                                            type="number"
+                                                            value={item.quantity}
+                                                            onChange={(e) => updateBasketQuantity(item.product.id, e.target.value)}
+                                                            className="w-12 py-0.5 px-1 bg-white border border-slate-200 rounded text-center font-bold text-[10px]"
+                                                            min={1}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <button 
+                                                    onClick={(e) => removeFromBasket(item.product.id, e)}
+                                                    className="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg border border-transparent hover:border-red-100 transition-all cursor-pointer absolute top-2 right-2"
+                                                >
+                                                    <Trash size={14} />
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <form onSubmit={handleBatchQuoteSubmit} className="border-t border-slate-100 pt-4 mt-4 space-y-4 text-xs font-semibold">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <label className="block text-slate-500 font-bold">{language === 'TR' ? 'Para Birimi' : 'Currency'}</label>
+                                            <select
+                                                value={basketCurrency}
+                                                onChange={(e) => setBasketCurrency(e.target.value)}
+                                                className="w-full py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl font-bold cursor-pointer text-slate-800"
+                                            >
+                                                <option value="TRY">TRY (₺)</option>
+                                                <option value="USD">USD ($)</option>
+                                                <option value="EUR">EUR (€)</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <label className="block text-slate-500 font-bold">{language === 'TR' ? 'KDV Oranı' : 'VAT Rate'}</label>
+                                            <select
+                                                value={basketVatRate}
+                                                onChange={(e) => setBasketVatRate(Number(e.target.value))}
+                                                className="w-full py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl font-bold cursor-pointer text-slate-800"
+                                            >
+                                                <option value={0}>%0 KDV</option>
+                                                <option value={10}>%10 KDV</option>
+                                                <option value={20}>%20 KDV</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="block text-slate-500 font-bold">
+                                            {language === 'TR' ? 'Genel Talepleriniz / Sipariş Notları' : 'General RFQ Notes / Shipping Terms'}
+                                        </label>
+                                        <textarea
+                                            rows="3"
+                                            required
+                                            value={basketNotes}
+                                            onChange={(e) => setBasketNotes(e.target.value)}
+                                            placeholder={language === 'TR' ? "Örn: Lütfen İstanbul teslimatı dahil teklifinizi belirtiniz. İnegöl fabrikadan araç teslimi fiyatları da ayrıca belirtilebilir..." : "e.g. Please include shipping to warehouse details..."}
+                                            className="w-full py-3 px-4 rounded-xl premium-input leading-relaxed text-slate-800"
+                                        />
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        className="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-indigo-600/10 transition-all cursor-pointer active:scale-98 flex items-center justify-center gap-1.5"
+                                    >
+                                        <ShoppingCart size={15} />
+                                        {language === 'TR' ? 'Teklif Taleplerini Gönder ➔' : 'Submit RFQ Requests ➔'}
+                                    </button>
+                                </form>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes slideLeft {
+                    from { transform: translateX(100%); }
+                    to { transform: translateX(0); }
+                }
+            `}} />
 
         </div>
     );

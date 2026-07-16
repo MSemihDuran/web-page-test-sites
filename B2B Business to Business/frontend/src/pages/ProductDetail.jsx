@@ -1,40 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, MessageSquare, Tag, Eye, Layers, Globe, LogOut, HelpCircle } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Tag, Eye, Layers, Globe, LogOut, HelpCircle, ShoppingCart } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 const ProductDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { language, changeLanguage, t } = useLanguage();
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState('');
+    const { user, token } = useAuth();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
 
     const [selectedColor, setSelectedColor] = useState('');
-
     const [activeImage, setActiveImage] = useState('');
 
     const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
     const [quoteNotes, setQuoteNotes] = useState('');
+    const [quoteQuantity, setQuoteQuantity] = useState(1);
+    const [quoteCurrency, setQuoteCurrency] = useState('TRY');
+    const [quoteVatRate, setQuoteVatRate] = useState(20.0);
 
     const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:5005'
         : 'https://rootwebcore-backend.onrender.com';
-
-    useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        const storedToken = localStorage.getItem('token');
-
-        if (!storedUser || !storedToken) {
-            navigate('/login');
-            return;
-        }
-
-        setUser(JSON.parse(storedUser));
-        setToken(storedToken);
-    }, [navigate]);
 
     useEffect(() => {
         const fetchProductDetail = async () => {
@@ -80,6 +69,22 @@ const ProductDetail = () => {
         }
     };
 
+    const addToBasket = () => {
+        const savedBasket = localStorage.getItem('apex_rfq_basket');
+        const basket = savedBasket ? JSON.parse(savedBasket) : [];
+        
+        const existsIndex = basket.findIndex(item => item.product.id === product.id);
+        if (existsIndex > -1) {
+            basket[existsIndex].quantity += 1;
+            basket[existsIndex].color = selectedColor;
+        } else {
+            basket.push({ product, quantity: 1, color: selectedColor });
+        }
+        
+        localStorage.setItem('apex_rfq_basket', JSON.stringify(basket));
+        alert(language === 'TR' ? 'Ürün teklif sepetinize eklendi!' : 'Product added to RFQ basket!');
+    };
+
     const handleRequestQuoteSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -91,7 +96,11 @@ const ProductDetail = () => {
                 },
                 body: JSON.stringify({
                     productId: product.id,
-                    notes: `Seçilen Renk: ${selectedColor}\n\n${quoteNotes}`
+                    notes: quoteNotes,
+                    quantity: Number(quoteQuantity),
+                    color: selectedColor,
+                    currency: quoteCurrency,
+                    vatRate: Number(quoteVatRate)
                 })
             });
             if (res.ok) {
@@ -130,7 +139,7 @@ const ProductDetail = () => {
             {}
             <header className="bg-white/80 backdrop-blur-md sticky top-0 z-40 py-4 px-6 border-b border-slate-200/60 shadow-sm">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/catalog')}>
+                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/20">
                             A
                         </div>
@@ -285,12 +294,20 @@ const ProductDetail = () => {
                         {}
                         <div className="pt-4 border-t border-slate-100">
                             {user?.role === 'BUYER' ? (
-                                <button 
-                                    onClick={() => setIsQuoteModalOpen(true)}
-                                    className="w-full py-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-indigo-600/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
-                                >
-                                    <MessageSquare size={16} /> {t('detail_btn_request_quote')}
-                                </button>
+                                <div className="flex gap-4">
+                                    <button 
+                                        onClick={addToBasket}
+                                        className="flex-1 py-4 rounded-xl border-2 border-indigo-600 hover:bg-indigo-50 text-indigo-600 text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98 bg-white"
+                                    >
+                                        <ShoppingCart size={16} /> {language === 'TR' ? 'Sepete Ekle' : 'Add to Basket'}
+                                    </button>
+                                    <button 
+                                        onClick={() => setIsQuoteModalOpen(true)}
+                                        className="flex-1 py-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-indigo-600/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
+                                    >
+                                        <MessageSquare size={16} /> {t('detail_btn_request_quote')}
+                                    </button>
+                                </div>
                             ) : (
                                 <div className="w-full py-3 px-4 rounded-xl bg-slate-50 border border-slate-200/60 text-[10px] font-black text-indigo-600 text-center uppercase tracking-wider">
                                     {t('detail_negotiation_info')}
@@ -327,10 +344,50 @@ const ProductDetail = () => {
 
                         <form onSubmit={handleRequestQuoteSubmit} className="space-y-4 text-xs font-semibold">
                             <div className="space-y-1.5">
+                                <label className="block text-slate-500 font-bold">{language === 'TR' ? 'Talep Edilen Adet' : 'Requested Quantity'}</label>
+                                <input 
+                                    type="number"
+                                    required
+                                    min={1}
+                                    value={quoteQuantity}
+                                    onChange={e => setQuoteQuantity(Number(e.target.value))}
+                                    className="w-full py-3 px-4 rounded-xl premium-input font-bold"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="block text-slate-500 font-bold">{language === 'TR' ? 'Para Birimi' : 'Currency'}</label>
+                                    <select
+                                        value={quoteCurrency}
+                                        onChange={e => setQuoteCurrency(e.target.value)}
+                                        className="w-full py-3 px-4 rounded-xl bg-slate-50 border border-slate-200 font-bold cursor-pointer text-slate-800"
+                                    >
+                                        <option value="TRY">TRY (₺)</option>
+                                        <option value="USD">USD ($)</option>
+                                        <option value="EUR">EUR (€)</option>
+                                    </select>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="block text-slate-500 font-bold">{language === 'TR' ? 'KDV Oranı' : 'VAT Rate'}</label>
+                                    <select
+                                        value={quoteVatRate}
+                                        onChange={e => setQuoteVatRate(Number(e.target.value))}
+                                        className="w-full py-3 px-4 rounded-xl bg-slate-50 border border-slate-200 font-bold cursor-pointer text-slate-800"
+                                    >
+                                        <option value={0}>%0 KDV</option>
+                                        <option value={10}>%10 KDV</option>
+                                        <option value={20}>%20 KDV</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
                                 <label className="block text-slate-500 font-bold">{t('detail_modal_notes_label')}</label>
                                 <textarea 
                                     required
-                                    rows="4"
+                                    rows="3"
                                     value={quoteNotes}
                                     onChange={e => setQuoteNotes(e.target.value)}
                                     className="w-full py-3 px-4 rounded-xl premium-input leading-relaxed"

@@ -82,14 +82,34 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage });
-
-router.post('/upload', authenticateJWT, requireRole(['SELLER', 'SUPER_ADMIN']), upload.single('image'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ error: 'No file uploaded' });
+const fileFilter = (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const mimeType = allowedTypes.test(file.mimetype);
+    const extName = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    
+    if (mimeType && extName) {
+        return cb(null, true);
     }
-    const imageUrl = `/uploads/${req.file.filename}`;
-    res.json({ success: true, imageUrl });
+    cb(new Error('Yalnızca resim dosyaları (.jpg, .jpeg, .png, .gif, .webp) yüklenebilir!'));
+};
+
+const upload = multer({ 
+    storage,
+    fileFilter,
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+});
+
+router.post('/upload', authenticateJWT, requireRole(['SELLER', 'SUPER_ADMIN']), (req, res) => {
+    upload.single('image')(req, res, (err) => {
+        if (err) {
+            return res.status(400).json({ error: err.message });
+        }
+        if (!req.file) {
+            return res.status(400).json({ error: 'Dosya seçilmedi!' });
+        }
+        const imageUrl = `/uploads/${req.file.filename}`;
+        res.json({ success: true, imageUrl });
+    });
 });
 
 router.post('/', authenticateJWT, requireRole(['SELLER', 'SUPER_ADMIN']), async (req, res) => {

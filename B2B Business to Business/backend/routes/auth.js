@@ -207,8 +207,6 @@ router.put('/profile', authenticateJWT, async (req, res) => {
         if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl;
         if (companyEmail !== undefined) updateData.companyEmail = companyEmail;
         if (companyPhone !== undefined) updateData.companyPhone = companyPhone;
-        if (companyEmailVerified !== undefined) updateData.companyEmailVerified = companyEmailVerified;
-        if (companyPhoneVerified !== undefined) updateData.companyPhoneVerified = companyPhoneVerified;
 
         if (email !== undefined && email !== currentUser.email) {
             updateData.pendingEmail = email;
@@ -308,12 +306,62 @@ router.post('/reject-profile/:userId', authenticateJWT, requireRole(['SUPER_ADMI
                 pendingPhone: null
             }
         });
-        res.json({ success: true, message: 'Profil degisiklik talebi reddedildi.' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to reject profile changes' });
     }
 });
+
+router.post('/verify-company', authenticateJWT, async (req, res) => {
+    const { type, code } = req.body;
+    if (!type || !code) {
+        return res.status(400).json({ error: 'Verification type and code are required' });
+    }
+
+    if (code !== '123456') {
+        return res.status(400).json({ error: 'Geçersiz doğrulama kodu! Test için 123456 yazın.' });
+    }
+
+    try {
+        const updateData = {};
+        if (type === 'email') {
+            updateData.companyEmailVerified = true;
+        } else if (type === 'phone') {
+            updateData.companyPhoneVerified = true;
+        } else {
+            return res.status(400).json({ error: 'Invalid verification type' });
+        }
+
+        const updated = await prisma.user.update({
+            where: { id: req.user.id },
+            data: updateData,
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                companyName: true,
+                phone: true,
+                logoUrl: true,
+                about: true,
+                role: true,
+                pendingEmail: true,
+                pendingPhone: true,
+                twoFactorEnabled: true,
+                avatarUrl: true,
+                companyEmail: true,
+                companyPhone: true,
+                companyEmailVerified: true,
+                companyPhoneVerified: true
+            }
+        });
+
+        res.json({ success: true, user: updated });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to verify company detail' });
+    }
+});
+
 module.exports = {
     router,
     authenticateJWT,

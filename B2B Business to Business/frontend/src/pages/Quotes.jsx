@@ -3,12 +3,14 @@ import { useNavigate, Link } from 'react-router-dom';
 import { MessageSquare, ArrowRight, Clock, LogOut, Globe, HelpCircle } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 
 const Quotes = () => {
     const navigate = useNavigate();
     const { language, changeLanguage, t } = useLanguage();
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState('');
+    const { user, token } = useAuth();
+    const { socket } = useSocket();
     const [quotes, setQuotes] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -16,19 +18,19 @@ const Quotes = () => {
         ? 'http://localhost:5005'
         : 'https://rootwebcore-backend.onrender.com';
 
-    useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        const storedToken = localStorage.getItem('token');
-
-        if (!storedUser || !storedToken) {
-            navigate('/login');
-            return;
+    const getCurrencySymbol = (currency) => {
+        switch (currency) {
+            case 'USD': return '$';
+            case 'EUR': return '€';
+            case 'TRY':
+            default: return '₺';
         }
+    };
 
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        setToken(storedToken);
-    }, [navigate]);
+    const formatPrice = (amount, currency) => {
+        if (amount === undefined || amount === null) return '';
+        return `${amount.toLocaleString('tr-TR')} ${getCurrencySymbol(currency)}`;
+    };
 
     const fetchQuotes = async () => {
         if (!token) return;
@@ -50,19 +52,20 @@ const Quotes = () => {
     useEffect(() => {
         if (token && user) {
             fetchQuotes();
-
-            const socket = io(API_BASE);
-            socket.emit('join_user', user.id);
-
-            socket.on('quote_notification', (data) => {
-                fetchQuotes();
-            });
-
-            return () => {
-                socket.disconnect();
-            };
         }
     }, [token, user]);
+
+    useEffect(() => {
+        if (socket) {
+            const handleNotification = () => {
+                fetchQuotes();
+            };
+            socket.on('quote_notification', handleNotification);
+            return () => {
+                socket.off('quote_notification', handleNotification);
+            };
+        }
+    }, [socket]);
 
     const getStatusStyle = (status) => {
         switch (status) {
@@ -102,7 +105,7 @@ const Quotes = () => {
             {}
             <header className="bg-white/80 backdrop-blur-md sticky top-0 z-40 py-4 px-6 border-b border-slate-200/60 shadow-sm">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/catalog')}>
+                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/20">
                             A
                         </div>
@@ -204,7 +207,7 @@ const Quotes = () => {
                                              {language === 'TR' ? 'ÖNERİLEN TEKLİF' : 'PROPOSED PRICE'}
                                          </span>
                                          <span className="text-sm font-black text-slate-950 block mt-0.5">
-                                             {q.proposedPrice ? `${q.proposedPrice.toLocaleString()} TRY` : (language === 'TR' ? 'Pazarlık Sürüyor' : 'Negotiations Active')}
+                                             {q.proposedPrice ? formatPrice(q.proposedPrice, q.currency) : (language === 'TR' ? 'Pazarlık Sürüyor' : 'Negotiations Active')}
                                          </span>
                                      </div>
                                      <span className={`px-3 py-1.5 rounded-xl border text-[9px] font-black uppercase tracking-wider ${getStatusStyle(q.status)}`}>

@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogIn, Lock, Mail, Eye, EyeOff, Globe } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
     const navigate = useNavigate();
     const { language, changeLanguage, t } = useLanguage();
+    const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -37,8 +39,7 @@ const Login = () => {
                     setTwoFactorRequired(true);
                     setTwoFactorUserId(data.userId);
                 } else {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
+                    login(data.user, data.token);
                     navigate('/');
                 }
             } else {
@@ -65,8 +66,7 @@ const Login = () => {
             });
             const data = await res.json();
             if (res.ok) {
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
+                login(data.user, data.token);
                 navigate('/');
             } else {
                 setError(data.error || (language === 'TR' ? 'Doğrulama kodu geçersiz.' : 'Invalid verification code.'));

@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ChevronRight, ShieldCheck, MessageSquare, BadgePercent, ArrowRight, User, Briefcase, Mail, Phone, Lock, Eye, EyeOff, Globe } from 'lucide-react';
 
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
     const navigate = useNavigate();
     const { language, changeLanguage, t } = useLanguage();
+    const { login, token, user } = useAuth();
 
     const [isWizardOpen, setIsWizardOpen] = useState(false);
     const [step, setStep] = useState(1); 
@@ -24,13 +26,23 @@ const Home = () => {
     const [logoUrl, setLogoUrl] = useState('');
 
     const [contactName, setContactName] = useState('');
-    const [contactEmail, setContactEmail] = useState('');
+    const [contactEmail, setCompanyEmail] = useState('');
     const [contactMessage, setContactMessage] = useState('');
     const [contactSuccess, setContactSuccess] = useState(false);
 
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
     const isLoggedIn = !!(token && user);
+
+    useEffect(() => {
+        if (window.location.hash) {
+            const id = window.location.hash.replace('#', '');
+            const element = document.getElementById(id);
+            if (element) {
+                setTimeout(() => {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                }, 150);
+            }
+        }
+    }, [window.location.hash]);
 
     const handleScroll = (e, id) => {
         e.preventDefault();
@@ -99,7 +111,6 @@ const Home = () => {
         };
 
         try {
-
             const regRes = await fetch(`${API_BASE}/api/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -121,8 +132,7 @@ const Home = () => {
             const logData = await logRes.json();
 
             if (logRes.ok) {
-                localStorage.setItem('token', logData.token);
-                localStorage.setItem('user', JSON.stringify(logData.user));
+                login(logData.user, logData.token);
                 localStorage.setItem('apex_show_onboarding', 'true');
                 setIsWizardOpen(false);
                 navigate('/');

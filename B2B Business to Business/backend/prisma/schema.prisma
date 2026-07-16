@@ -68,6 +68,11 @@ model QuoteRequest {
   proposedPrice  Float?
   lastProposerId Int?
   notes          String?
+  quantity      Int            @default(1)
+  color         String?
+  currency      String         @default("TRY")
+  vatRate       Float          @default(20.0)
+  trackingStage String         @default("RECEIVED")
   messages      QuoteMessage[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt

@@ -1,41 +1,40 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Send, CheckCircle, XCircle, Clock, Globe, LogOut, HelpCircle } from 'lucide-react';
-import { io } from 'socket.io-client';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 
 const QuoteDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { language, changeLanguage, t } = useLanguage();
+    const { user, token } = useAuth();
+    const { socket } = useSocket();
     const messagesEndRef = useRef(null);
 
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState('');
     const [quote, setQuote] = useState(null);
-
     const [priceInput, setPriceInput] = useState('');
-
     const [messages, setMessages] = useState([]);
     const [messageInput, setMessageInput] = useState('');
-    const [socket, setSocket] = useState(null);
 
     const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:5005'
         : 'https://rootwebcore-backend.onrender.com';
 
-    useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        const storedToken = localStorage.getItem('token');
-
-        if (!storedUser || !storedToken) {
-            navigate('/login');
-            return;
+    const getCurrencySymbol = (currency) => {
+        switch (currency) {
+            case 'USD': return '$';
+            case 'EUR': return '€';
+            case 'TRY':
+            default: return '₺';
         }
+    };
 
-        setUser(JSON.parse(storedUser));
-        setToken(storedToken);
-    }, [navigate]);
+    const formatPrice = (amount, currency) => {
+        if (amount === undefined || amount === null) return '';
+        return `${amount.toLocaleString('tr-TR')} ${getCurrencySymbol(currency)}`;
+    };
 
     const fetchQuoteDetails = async () => {
         if (!token) return;
@@ -61,30 +60,36 @@ const QuoteDetail = () => {
     useEffect(() => {
         if (token && user) {
             fetchQuoteDetails();
+        }
+    }, [token, user, id]);
 
-            const s = io(API_BASE);
-            setSocket(s);
+    useEffect(() => {
+        if (socket) {
+            socket.emit('join_quote', Number(id));
 
-            s.emit('join_quote', Number(id));
-
-            s.on('new_message', (msg) => {
+            const handleNewMessage = (msg) => {
                 setMessages(prev => [...prev, msg]);
-            });
+            };
 
-            s.on('quote_update', (updatedQuote) => {
+            const handleQuoteUpdate = (updatedQuote) => {
                 setQuote(prev => ({
                     ...prev,
                     status: updatedQuote.status,
                     proposedPrice: updatedQuote.proposedPrice,
-                    lastProposerId: updatedQuote.lastProposerId
+                    lastProposerId: updatedQuote.lastProposerId,
+                    trackingStage: updatedQuote.trackingStage
                 }));
-            });
+            };
+
+            socket.on('new_message', handleNewMessage);
+            socket.on('quote_update', handleQuoteUpdate);
 
             return () => {
-                s.disconnect();
+                socket.off('new_message', handleNewMessage);
+                socket.off('quote_update', handleQuoteUpdate);
             };
         }
-    }, [token, user, id]);
+    }, [socket, id]);
 
     useEffect(() => {
         if (messagesEndRef.current) {
@@ -133,6 +138,25 @@ const QuoteDetail = () => {
             if (!res.ok) {
                 const data = await res.json();
                 alert(data.error || 'İşlem başarısız.');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleUpdateTrackingStage = async (stage) => {
+        try {
+            const res = await fetch(`${API_BASE}/api/quotes/${id}/tracking`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ trackingStage: stage })
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                alert(data.error || 'Takip durumu güncellenemedi.');
             }
         } catch (err) {
             console.error(err);
@@ -188,7 +212,7 @@ const QuoteDetail = () => {
             {}
             <header className="bg-white/80 backdrop-blur-md sticky top-0 z-40 py-4 px-6 border-b border-slate-200/60 shadow-sm">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/catalog')}>
+                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/20">
                             A
                         </div>
@@ -249,6 +273,85 @@ const QuoteDetail = () => {
                     <ArrowLeft size={14} /> {t('back_to_quotes')}
                 </button>
 
+                {/* Visual Production & Order Timeline */}
+                {quote && quote.status === 'APPROVED' && (
+                    <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm flex flex-col gap-6">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <h3 className="text-sm font-black text-slate-900">
+                                    {language === 'TR' ? 'Üretim ve Sevkiyat Takip Süreci' : 'Production & Logistics Tracking'}
+                                </h3>
+                                <p className="text-[10px] text-slate-400 font-extrabold uppercase mt-1 tracking-wider">
+                                    {language === 'TR' ? 'Sipariş Durumu Aşamaları' : 'Order Status Stages'}
+                                </p>
+                            </div>
+                            {(user.role === 'SELLER' || user.role === 'SUPER_ADMIN') && (
+                                <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 border border-indigo-100 py-1 px-3 rounded-xl uppercase tracking-wider animate-pulse">
+                                    {language === 'TR' ? 'Üretici Yetkisi: Durumu Güncelleyebilirsiniz' : 'Manufacturer Control: Click stages to update'}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Timeline Track */}
+                        <div className="relative flex justify-between items-center w-full px-4 sm:px-10 mt-2">
+                            {/* Connector line */}
+                            <div className="absolute left-10 right-10 top-1/2 -translate-y-1/2 h-1 bg-slate-200 z-0">
+                                <div 
+                                    className="h-full bg-indigo-600 transition-all duration-500" 
+                                    style={{
+                                        width: 
+                                            quote.trackingStage === 'RECEIVED' ? '0%' :
+                                            quote.trackingStage === 'PRODUCTION' ? '25%' :
+                                            quote.trackingStage === 'QUALITY' ? '50%' :
+                                            quote.trackingStage === 'SHIPPED' ? '75%' :
+                                            '100%'
+                                    }}
+                                />
+                            </div>
+
+                            {/* Stages */}
+                            {[
+                                { stage: 'RECEIVED', labelTr: 'Sipariş Alındı', labelEn: 'Order Received' },
+                                { stage: 'PRODUCTION', labelTr: 'Üretimde', labelEn: 'In Production' },
+                                { stage: 'QUALITY', labelTr: 'Kalite Kontrol', labelEn: 'Quality Control' },
+                                { stage: 'SHIPPED', labelTr: 'Kargoda', labelEn: 'Shipped' },
+                                { stage: 'DELIVERED', labelTr: 'Teslim Edildi', labelEn: 'Delivered' }
+                            ].map((item, idx) => {
+                                const stageOrder = ['RECEIVED', 'PRODUCTION', 'QUALITY', 'SHIPPED', 'DELIVERED'];
+                                const currentIndex = stageOrder.indexOf(quote.trackingStage || 'RECEIVED');
+                                const isCompleted = idx < currentIndex;
+                                const isActive = idx === currentIndex;
+                                const isInteractive = user.role === 'SELLER' || user.role === 'SUPER_ADMIN';
+
+                                return (
+                                    <div 
+                                        key={item.stage} 
+                                        onClick={() => isInteractive && handleUpdateTrackingStage(item.stage)}
+                                        className={`flex flex-col items-center gap-2.5 z-10 relative ${isInteractive ? 'cursor-pointer group' : ''}`}
+                                    >
+                                        <div 
+                                            className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs transition-all duration-300 border-2 ${
+                                                isCompleted 
+                                                    ? 'bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-500/20' 
+                                                    : isActive 
+                                                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-600/30 scale-110' 
+                                                        : 'bg-white border-slate-300 text-slate-400 group-hover:border-slate-400'
+                                            }`}
+                                        >
+                                            {isCompleted ? '✓' : idx + 1}
+                                        </div>
+                                        <span className={`text-[10px] font-black tracking-tight text-center ${
+                                            isActive ? 'text-indigo-600' : isCompleted ? 'text-emerald-600 font-bold' : 'text-slate-400'
+                                        }`}>
+                                            {language === 'TR' ? item.labelTr : item.labelEn}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                     {}
@@ -301,17 +404,45 @@ const QuoteDetail = () => {
                                 </span>
                             </div>
 
-                            <div className="flex justify-between items-center border-t border-slate-100 pt-4">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t('qdetail_sidebar_last_proposal')}</span>
-                                <span className="text-2xl font-black text-amber-600">
-                                    {quote.proposedPrice ? `${quote.proposedPrice.toLocaleString()} TRY` : (language === 'TR' ? 'Pazarlık Sürüyor' : 'Bargaining Active')}
-                                </span>
+                            <div className="flex flex-col border-t border-slate-100 pt-4 gap-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                        {language === 'TR' ? 'Birim Fiyat Teklifi' : 'Unit Price Proposal'}
+                                    </span>
+                                    <span className="text-xl font-black text-amber-600">
+                                        {quote.proposedPrice ? formatPrice(quote.proposedPrice, quote.currency) : (language === 'TR' ? 'Pazarlık Sürüyor' : 'Bargaining Active')}
+                                    </span>
+                                </div>
+                                {quote.proposedPrice && (
+                                    <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl space-y-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                                        <div className="flex justify-between text-slate-800">
+                                            <span>{language === 'TR' ? 'Adet Miktarı:' : 'Quantity:'}</span>
+                                            <span className="text-slate-900">{quote.quantity}</span>
+                                        </div>
+                                        <div className="flex justify-between text-slate-800">
+                                            <span>{language === 'TR' ? 'KDV Oranı:' : 'VAT Rate:'}</span>
+                                            <span className="text-slate-900">%{quote.vatRate}</span>
+                                        </div>
+                                        <div className="flex justify-between border-t border-slate-200/60 pt-1 text-slate-800">
+                                            <span>{language === 'TR' ? 'Ara Toplam (KDV Hariç):' : 'Subtotal (Excl. VAT):'}</span>
+                                            <span className="text-slate-900">{formatPrice(quote.proposedPrice * quote.quantity, quote.currency)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-slate-800">
+                                            <span>{language === 'TR' ? `KDV (%${quote.vatRate}):` : `VAT (%${quote.vatRate}):`}</span>
+                                            <span className="text-slate-900">{formatPrice((quote.proposedPrice * quote.quantity) * (quote.vatRate / 100), quote.currency)}</span>
+                                        </div>
+                                        <div className="flex justify-between border-t border-indigo-100 pt-1 text-xs font-black text-indigo-600">
+                                            <span>{language === 'TR' ? 'Genel Toplam (KDV Dahil):' : 'Total (Incl. VAT):'}</span>
+                                            <span>{formatPrice((quote.proposedPrice * quote.quantity) * (1 + quote.vatRate / 100), quote.currency)}</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {(quote.status === 'PENDING' || quote.status === 'OFFERED') && (
                                 <form onSubmit={handleSendOffer} className="border-t border-slate-100 pt-4 space-y-3">
                                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                        {language === 'TR' ? 'Fiyat Öner (TRY)' : 'Propose Price (TRY)'}
+                                        {language === 'TR' ? `Birim Fiyat Öner (${quote.currency})` : `Propose Unit Price (${quote.currency})`}
                                     </label>
                                     <div className="flex gap-2">
                                         <input 

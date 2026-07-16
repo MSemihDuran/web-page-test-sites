@@ -7,11 +7,13 @@ import {
 } from 'lucide-react';
 
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 const Settings = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { language, changeLanguage, t } = useLanguage();
+    const { user: authUser, token: authToken, login: authLogin, logout: authLogout } = useAuth();
     const [user, setUser] = useState(null);
     const [token, setToken] = useState('');
     const [loading, setLoading] = useState(true);
@@ -64,22 +66,19 @@ const Settings = () => {
         : 'https://rootwebcore-backend.onrender.com';
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        const storedToken = localStorage.getItem('token');
-
-        if (!storedUser || !storedToken) {
+        if (!authToken || !authUser) {
             navigate('/login');
             return;
         }
 
-        setUser(JSON.parse(storedUser));
-        setToken(storedToken);
+        setUser(authUser);
+        setToken(authToken);
 
         const localSound = localStorage.getItem('apex_sound_alerts') !== 'false';
         const localEmail = localStorage.getItem('apex_email_alerts') !== 'false';
         setSoundAlerts(localSound);
         setEmailAlerts(localEmail);
-    }, [navigate]);
+    }, [authToken, authUser, navigate]);
 
     const fetchUserProfile = async () => {
         if (!token) return;
@@ -102,7 +101,7 @@ const Settings = () => {
                 setCompanyEmailVerified(data.companyEmailVerified || false);
                 setCompanyPhoneVerified(data.companyPhoneVerified || false);
 
-                localStorage.setItem('user', JSON.stringify(data));
+                authLogin(data, token);
 
                 if (data.role === 'SUPER_ADMIN') {
                     fetchPendingApprovals();
@@ -558,7 +557,7 @@ const Settings = () => {
             {}
             <header className="bg-white/80 backdrop-blur-md sticky top-0 z-40 py-4 px-6 border-b border-slate-200/60 shadow-sm">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <Link to="/catalog" className="flex items-center gap-3">
+                    <Link to="/" className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/20">
                             A
                         </div>
@@ -604,7 +603,7 @@ const Settings = () => {
                             </div>
                         </Link>
                         <button 
-                            onClick={() => { localStorage.clear(); navigate('/'); }}
+                            onClick={() => { authLogout(); navigate('/'); }}
                             className="p-1.5 rounded-xl border border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
                             title={language === 'TR' ? 'Çıkış Yap' : 'Log Out'}
                         >

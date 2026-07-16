@@ -78,7 +78,7 @@ router.get('/:id', authenticateJWT, async (req, res) => {
 });
 
 router.post('/', authenticateJWT, requireRole(['BUYER', 'SUPER_ADMIN']), async (req, res) => {
-    const { productId, notes } = req.body;
+    const { productId, notes, quantity, color, currency, vatRate } = req.body;
 
     if (!productId) {
         return res.status(400).json({ error: 'Product ID is required' });
@@ -100,7 +100,11 @@ router.post('/', authenticateJWT, requireRole(['BUYER', 'SUPER_ADMIN']), async (
                 buyerId: req.user.id,
                 sellerId: product.sellerId,
                 status: 'PENDING',
-                notes: notes || null
+                notes: notes || null,
+                quantity: quantity !== undefined ? Number(quantity) : 1,
+                color: color || null,
+                currency: currency || 'TRY',
+                vatRate: vatRate !== undefined ? Number(vatRate) : 20.0
             },
             include: {
                 product: { select: { title: true } },
@@ -118,6 +122,98 @@ router.post('/', authenticateJWT, requireRole(['BUYER', 'SUPER_ADMIN']), async (
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to submit quote request' });
+    }
+});
+
+router.post('/batch', authenticateJWT, requireRole(['BUYER', 'SUPER_ADMIN']), async (req, res) => {
+    const { items, notes, currency, vatRate } = req.body;
+
+    if (!Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ error: 'Items array is required' });
+    }
+
+    try {
+        const createdQuotes = [];
+        
+        for (const item of items) {
+            const product = await prisma.product.findUnique({ where: { id: Number(item.productId) } });
+            if (!product) continue;
+
+            if (product.sellerId === req.user.id) continue;
+
+            const quote = await prisma.quoteRequest.create({
+                data: {
+                    productId: product.id,
+                    buyerId: req.user.id,
+                    sellerId: product.sellerId,
+                    status: 'PENDING',
+                    notes: notes || null,
+                    quantity: item.quantity !== undefined ? Number(item.quantity) : 1,
+                    color: item.color || null,
+                    currency: currency || 'TRY',
+                    vatRate: vatRate !== undefined ? Number(vatRate) : 20.0
+                },
+                include: {
+                    product: { select: { title: true } },
+                    buyer: { select: { name: true, companyName: true } }
+                }
+            });
+
+            createdQuotes.push(quote);
+
+            emitSocketEvent(req, `user_${product.sellerId}`, 'quote_notification', {
+                type: 'NEW_QUOTE',
+                quoteId: quote.id,
+                message: `${quote.buyer.name} (${quote.buyer.companyName || 'Alıcı'}) adlı firmadan '${quote.product.title}' ürünü için yeni bir teklif talebi geldi!`
+            });
+        }
+
+        res.status(201).json({ success: true, count: createdQuotes.length, quotes: createdQuotes });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to submit batch quote requests' });
+    }
+});
+
+router.post('/:id/tracking', authenticateJWT, async (req, res) => {
+    const id = Number(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Invalid quote ID' });
+
+    const { trackingStage } = req.body;
+    const allowedStages = ['RECEIVED', 'PRODUCTION', 'QUALITY', 'SHIPPED', 'DELIVERED'];
+    if (!allowedStages.includes(trackingStage)) {
+        return res.status(400).json({ error: 'Invalid tracking stage' });
+    }
+
+    try {
+        const quote = await prisma.quoteRequest.findUnique({
+            where: { id },
+            include: { product: { select: { title: true } } }
+        });
+
+        if (!quote) return res.status(404).json({ error: 'Quote request not found' });
+
+        if (quote.sellerId !== req.user.id && req.user.role !== 'SUPER_ADMIN') {
+            return res.status(403).json({ error: 'Forbidden: Only the seller can update order tracking stage' });
+        }
+
+        const updated = await prisma.quoteRequest.update({
+            where: { id },
+            data: { trackingStage }
+        });
+
+        emitSocketEvent(req, `user_${quote.buyerId}`, 'quote_notification', {
+            type: 'TRACKING_UPDATED',
+            quoteId: quote.id,
+            message: `'${quote.product.title}' siparişinizin durum güncellendi: ${trackingStage}`
+        });
+
+        emitSocketEvent(req, `quote_${quote.id}`, 'quote_update', updated);
+
+        res.json({ success: true, quote: updated });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to update tracking stage' });
     }
 });
 
