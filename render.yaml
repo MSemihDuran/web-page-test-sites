@@ -3,7 +3,7 @@
 
 services:
   - type: web
-    name: burak-tekstil-3d
+    name: buraktekstil
     env: static
     rootDir: burak-modern-portfolio
     buildCommand: npm install && npm run build
