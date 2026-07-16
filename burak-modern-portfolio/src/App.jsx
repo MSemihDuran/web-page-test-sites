@@ -11,7 +11,9 @@ import {
   FiPlay, 
   FiPause,
   FiPhone,
-  FiMapPin
+  FiMapPin,
+  FiMenu,
+  FiX
 } from 'react-icons/fi';
 import WeavingLoom3D from './components/WeavingLoom3D';
 
@@ -22,6 +24,7 @@ export default function App() {
   const [warpColor, setWarpColor] = useState('#c5a059'); // Gold default
   const [weftColor, setWeftColor] = useState('#f4d08b'); // Glow Gold default
   const [pattern, setPattern] = useState('plain');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Scroll tracking state
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -145,7 +148,7 @@ export default function App() {
           {/* logo.png cropped and enlarged to w-12 h-12, vertically shifted slightly down (top-[53.5%]) to compensate for asset asymmetry */}
           <div className="relative w-12 h-12 overflow-hidden flex items-center justify-center">
             <img 
-              src="/logo.png" 
+              src="./logo.png" 
               alt="Burak Tekstil Logo" 
               className="w-[155px] h-[155px] max-w-none absolute left-1/2 top-[53.5%] -translate-x-1/2 -translate-y-1/2 object-contain transition-transform duration-500 group-hover:scale-[1.08]" 
             />
@@ -201,8 +204,54 @@ export default function App() {
           >
             TEKLİF AL
           </button>
+          
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden text-white hover:text-brand-gold p-2 transition-colors cursor-pointer"
+            aria-label="Menü"
+          >
+            {isMobileMenuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
+          </button>
         </div>
       </motion.header>
+
+      {/* Mobile Menu Dropdown */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="fixed top-24 left-[2.5%] w-[95%] bg-brand-bg/95 border border-white/[0.08] backdrop-blur-2xl rounded-3xl p-6 z-40 md:hidden shadow-[0_20px_50px_rgba(4,5,13,0.95)] flex flex-col gap-4"
+          >
+            {[
+              { id: 'hero', label: 'Ana Sayfa' },
+              { id: 'about', label: 'Neden Biz?' },
+              { id: 'tech', label: 'Hassasiyet' },
+              { id: 'speed', label: 'Hız' },
+              { id: 'quality', label: 'Kalite' },
+              { id: 'lab', label: 'Laboratuvar' },
+              { id: 'contact', label: 'Teklif Al & İletişim' }
+            ].map((item) => (
+              <button 
+                key={item.id}
+                onClick={() => {
+                  scrollToSection(item.id);
+                  setIsMobileMenuOpen(false);
+                }} 
+                className={`py-3 px-4 rounded-xl text-left text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
+                  activeSection === item.id 
+                    ? 'bg-brand-gold/15 text-brand-gold border border-brand-gold/30' 
+                    : 'text-slate-300 hover:text-white bg-white/[0.02] border border-transparent'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* OVERLAY CONTENT AREA */}
       <main className="relative z-10">
@@ -222,7 +271,7 @@ export default function App() {
               {/* Rounded square container with logo centered precisely (top-[54.5%] compensates for the asset's empty bottom padding) */}
               <div className="relative w-28 h-28 rounded-3xl bg-brand-navy/30 flex items-center justify-center border border-brand-gold/30 shadow-[0_15px_30px_rgba(0,0,0,0.5)] overflow-hidden">
                 <img 
-                  src="/logo.png" 
+                  src="./logo.png" 
                   alt="Burak Tekstil Logo" 
                   className="w-[340px] h-[340px] max-w-none absolute left-1/2 top-[54.5%] -translate-x-1/2 -translate-y-1/2 object-contain transition-transform duration-500 group-hover:scale-[1.08]" 
                 />
@@ -617,7 +666,7 @@ export default function App() {
             {/* Cropped footer logo */}
             <div className="relative w-8 h-8 overflow-hidden flex items-center justify-center">
               <img 
-                src="/logo.png" 
+                src="./logo.png" 
                 alt="Burak Tekstil Logo" 
                 className="w-[96px] h-[96px] max-w-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-contain" 
               />
