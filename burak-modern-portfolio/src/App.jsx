@@ -15,21 +15,6 @@ import {
 } from 'react-icons/fi';
 import WeavingLoom3D from './components/WeavingLoom3D';
 
-// Vector logo matching brand colors
-const BurakTekstilLogo = ({ className = "w-10 h-10" }) => (
-  <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M35 25V75M40 25V75M45 25V75" stroke="#11163b" strokeWidth="3.5" strokeLinecap="round"/>
-    <path d="M30 30L25 35M30 40L20 50M30 50L25 55" stroke="#c5a059" strokeWidth="2.5" strokeLinecap="round" opacity="0.7"/>
-    <path d="M47 30C55 30 62 33 62 42C62 49 55 50 47 50C55 50 64 51 64 61C64 70 55 70 47 70" stroke="#c5a059" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M52 57H58M52 63H56" stroke="#c5a059" strokeWidth="2.5" strokeLinecap="round"/>
-    <g transform="rotate(-30 45 50)">
-      <rect x="20" y="46" width="50" height="8" rx="4" fill="#11163b" stroke="#c5a059" strokeWidth="1.5"/>
-      <path d="M60 50H72" stroke="#11163b" strokeWidth="2" strokeLinecap="round"/>
-      <circle cx="26" cy="50" r="1.5" fill="#c5a059"/>
-    </g>
-  </svg>
-);
-
 export default function App() {
   // Loom interactive state
   const [isPlaying, setIsPlaying] = useState(true);
@@ -40,6 +25,7 @@ export default function App() {
 
   // Scroll tracking state
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [activeSection, setActiveSection] = useState('hero');
 
   // Monitor scroll height and update progress
   useEffect(() => {
@@ -61,6 +47,43 @@ export default function App() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // IntersectionObserver to spy on active sections for navigation menu
+  useEffect(() => {
+    const sections = ['hero', 'about', 'tech', 'speed', 'quality', 'lab', 'contact'];
+    const observerOptions = {
+      root: null,
+      rootMargin: '-30% 0px -60% 0px', // Triggers when section occupies the active middle band of the screen
+      threshold: 0
+    };
+
+    const observerCallback = (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    sections.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    // Fallback when scrolled to the very top
+    const handleScrollTop = () => {
+      if (window.scrollY < 120) {
+        setActiveSection('hero');
+      }
+    };
+    window.addEventListener('scroll', handleScrollTop);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', handleScrollTop);
+    };
   }, []);
 
   // Quick navigation handler
@@ -94,7 +117,7 @@ export default function App() {
       {/* Floating interactive 3D WebGL Canvas in background */}
       <div className="fixed inset-0 w-full h-full -z-10 overflow-hidden">
         {/* Shadow overlays to create depth and mask Three.js boundaries */}
-        <div className="absolute inset-0 bg-gradient-to-b from-brand-bg via-transparent to-brand-bg pointer-events-none z-10 opacity-80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-brand-bg via-transparent to-brand-bg pointer-events-none z-10 opacity-70" />
         <div className="absolute inset-y-0 left-0 w-32 md:w-64 bg-gradient-to-r from-brand-bg to-transparent pointer-events-none z-10" />
         <div className="absolute inset-y-0 right-0 w-32 md:w-64 bg-gradient-to-l from-brand-bg to-transparent pointer-events-none z-10" />
         
@@ -113,25 +136,57 @@ export default function App() {
         initial={{ y: -60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed top-6 left-1/2 -translate-x-1/2 w-[92%] max-w-6xl bg-brand-bg/40 border border-white/[0.06] backdrop-blur-xl rounded-full py-2.5 px-6 z-50 flex justify-between items-center shadow-[0_20px_50px_rgba(4,5,13,0.9)]"
+        className="fixed top-6 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl bg-brand-bg/30 border border-white/[0.05] backdrop-blur-xl rounded-full py-2.5 px-6 z-50 flex justify-between items-center shadow-[0_20px_50px_rgba(4,5,13,0.9)]"
       >
         <span 
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
-          className="font-outfit font-extrabold text-lg tracking-wider text-white flex items-center gap-2 cursor-pointer group"
+          className="font-outfit font-extrabold text-lg tracking-wider text-white flex items-center gap-3 cursor-pointer group"
         >
-          <BurakTekstilLogo className="w-9 h-9 transition-transform duration-500 group-hover:rotate-[360deg]" />
-          <span className="hidden sm:inline font-syne text-glow-white">
+          {/* logo.png cropped and enlarged to w-12 h-12, vertically shifted slightly down (top-[53.5%]) to compensate for asset asymmetry */}
+          <div className="relative w-12 h-12 overflow-hidden flex items-center justify-center">
+            <img 
+              src="/logo.png" 
+              alt="Burak Tekstil Logo" 
+              className="w-[155px] h-[155px] max-w-none absolute left-1/2 top-[53.5%] -translate-x-1/2 -translate-y-1/2 object-contain transition-transform duration-500 group-hover:scale-[1.08]" 
+            />
+          </div>
+          <span className="hidden sm:inline font-syne text-glow-white ml-1 text-base tracking-wide">
             BURAK <span className="text-brand-gold">TEKSTİL</span>
           </span>
         </span>
 
-        {/* Navigation links */}
-        <nav className="hidden md:flex gap-7 text-xs font-semibold uppercase tracking-widest text-slate-300">
-          <button onClick={() => scrollToSection('about')} className="hover:text-brand-gold transition-colors duration-300">Neden Biz?</button>
-          <button onClick={() => scrollToSection('tech')} className="hover:text-brand-gold transition-colors duration-300">Hassasiyet</button>
-          <button onClick={() => scrollToSection('speed')} className="hover:text-brand-gold transition-colors duration-300">Hız</button>
-          <button onClick={() => scrollToSection('quality')} className="hover:text-brand-gold transition-colors duration-300">Kalite</button>
-          <button onClick={() => scrollToSection('lab')} className="hover:text-brand-gold transition-colors duration-300">Laboratuvar</button>
+        {/* Spaced navigation links for a wider, more breathable menu layout */}
+        <nav className="hidden md:flex gap-2.5 px-2.5 py-1.5 items-center text-xxs font-extrabold uppercase tracking-widest bg-black/45 border border-white/[0.04] rounded-full backdrop-blur-md">
+          {[
+            { id: 'hero', label: 'Ana Sayfa' },
+            { id: 'about', label: 'Neden Biz?' },
+            { id: 'tech', label: 'Hassasiyet' },
+            { id: 'speed', label: 'Hız' },
+            { id: 'quality', label: 'Kalite' },
+            { id: 'lab', label: 'Laboratuvar' }
+          ].map((item) => (
+            <button 
+              key={item.id}
+              onClick={() => scrollToSection(item.id)} 
+              className={`relative py-2 px-3.5 rounded-full transition-all duration-300 cursor-pointer ${
+                activeSection === item.id 
+                  ? 'text-white text-glow-white font-black' 
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              {activeSection === item.id && (
+                <motion.div
+                  layoutId="activeNavBubble"
+                  className="absolute inset-0 rounded-full bg-brand-gold/15 border border-brand-gold/50 shadow-[0_0_12px_rgba(197,160,89,0.3)] backdrop-blur-md"
+                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                >
+                  {/* Liquid gloss reflection */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-white/[0.02] to-white/[0.12] opacity-70 pointer-events-none" />
+                </motion.div>
+              )}
+              <span className="relative z-10">{item.label}</span>
+            </button>
+          ))}
         </nav>
 
         {/* Active Loom State Badge */}
@@ -153,18 +208,24 @@ export default function App() {
       <main className="relative z-10">
 
         {/* 1. HERO SECTION */}
-        <section className="min-h-screen flex flex-col justify-center items-center px-6 relative pt-20">
+        <section id="hero" className="min-h-screen flex flex-col justify-center items-center px-6 relative pt-20 pb-32">
           <div className="max-w-4xl text-center flex flex-col items-center">
             
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-              className="mb-8 relative group"
+              className="mb-8 relative group cursor-pointer"
+              onClick={() => scrollToSection('about')}
             >
               <div className="absolute inset-0 bg-brand-gold/15 rounded-3xl blur-2xl group-hover:bg-brand-gold/25 transition-all duration-500" />
-              <div className="relative w-24 h-24 rounded-3xl bg-brand-navy/40 flex items-center justify-center border border-brand-gold/30 shadow-[0_15px_30px_rgba(0,0,0,0.5)]">
-                <BurakTekstilLogo className="w-16 h-16" />
+              {/* Rounded square container with logo centered precisely (top-[54.5%] compensates for the asset's empty bottom padding) */}
+              <div className="relative w-28 h-28 rounded-3xl bg-brand-navy/30 flex items-center justify-center border border-brand-gold/30 shadow-[0_15px_30px_rgba(0,0,0,0.5)] overflow-hidden">
+                <img 
+                  src="/logo.png" 
+                  alt="Burak Tekstil Logo" 
+                  className="w-[340px] h-[340px] max-w-none absolute left-1/2 top-[54.5%] -translate-x-1/2 -translate-y-1/2 object-contain transition-transform duration-500 group-hover:scale-[1.08]" 
+                />
               </div>
             </motion.div>
 
@@ -182,7 +243,7 @@ export default function App() {
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4, duration: 1 }}
-              className="text-4xl md:text-7xl font-syne font-extrabold text-white leading-tight tracking-tight text-glow-white"
+              className="text-3xl sm:text-5xl md:text-7xl font-syne font-extrabold text-white leading-tight tracking-tight text-glow-white"
             >
               İplikten Kumaşa <br />
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-gold via-brand-gold-glow to-white text-glow-gold">
@@ -552,8 +613,15 @@ export default function App() {
       {/* FOOTER */}
       <footer className="border-t border-white/[0.05] bg-[#020308] py-8 text-center text-slate-500 text-xxs font-mono relative z-10">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <BurakTekstilLogo className="w-6 h-6" />
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            {/* Cropped footer logo */}
+            <div className="relative w-8 h-8 overflow-hidden flex items-center justify-center">
+              <img 
+                src="/logo.png" 
+                alt="Burak Tekstil Logo" 
+                className="w-[96px] h-[96px] max-w-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-contain" 
+              />
+            </div>
             <span>© 2026 BURAK TEKSTİL. Tüm Hakları Saklıdır.</span>
           </div>
           <div className="flex gap-6">

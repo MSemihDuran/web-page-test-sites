@@ -23,12 +23,14 @@ export default function WeavingLoom3D({
     containerRef.current.innerHTML = '';
 
     // --- 1. SETUP THREE.JS SCENE ---
-    // Use window sizes as robust full-screen fallbacks to prevent 0px clientWidth/clientHeight on mount
     const width = window.innerWidth;
     const height = window.innerHeight;
 
     const scene = new THREE.Scene();
     scene.background = null; 
+
+    // Atmospheric Industrial Fog (fades distant workshop elements into brand-bg)
+    scene.fog = new THREE.FogExp2(0x04050d, 0.045);
 
     // Camera
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
@@ -38,15 +40,15 @@ export default function WeavingLoom3D({
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setClearColor(0x000000, 0); // Oynatıcıyı şeffaf yap
+    renderer.setClearColor(0x000000, 0); 
     containerRef.current.appendChild(renderer.domElement);
 
-    // --- 2. LIGHTS ---
-    const ambientLight = new THREE.AmbientLight(0x0f172a, 1.5);
+    // --- 2. LIGHTS & ATMOSPHERE ---
+    const ambientLight = new THREE.AmbientLight(0x0f172a, 1.4);
     scene.add(ambientLight);
 
-    const dirLight1 = new THREE.DirectionalLight(0xffffff, 2.5);
-    dirLight1.position.set(5, 10, 7);
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 2.8);
+    dirLight1.position.set(5, 12, 7);
     scene.add(dirLight1);
 
     const goldLight = new THREE.DirectionalLight(0xc5a059, 3.0);
@@ -54,12 +56,321 @@ export default function WeavingLoom3D({
     scene.add(goldLight);
 
     // Moving point light for the shuttle glow
-    const shuttleLight = new THREE.PointLight(0xf4d08b, 5, 8);
+    const shuttleLight = new THREE.PointLight(0xf4d08b, 6, 9);
     scene.add(shuttleLight);
 
-    // --- 3. CREATE LOOM COMPONENT MESHES ---
+    // Warm Industrial Amber Lights (attached to workshop pillars for mood)
+    const factoryLight1 = new THREE.PointLight(0xffb74d, 4.0, 14);
+    factoryLight1.position.set(-4.8, 3.5, -2);
+    scene.add(factoryLight1);
+
+    const factoryLight2 = new THREE.PointLight(0xffb74d, 4.0, 14);
+    factoryLight2.position.set(4.8, 3.5, -2);
+    scene.add(factoryLight2);
+
+    // --- 3. INDUSTRIAL WORKSHOP BACKGROUND ELEMENTS ---
+    
+    // 3.1 Floor Grid
+    const floorHelper = new THREE.GridHelper(40, 40, 0xc5a059, 0x1c235a);
+    floorHelper.position.y = -0.5;
+    floorHelper.material.opacity = 0.35;
+    floorHelper.material.transparent = true;
+    scene.add(floorHelper);
+
+    // 3.2 Workshop Structural Columns & Crossbeams
+    const pillarGeo = new THREE.BoxGeometry(0.3, 10, 0.3);
+    const pillarMat = new THREE.MeshStandardMaterial({ 
+      color: 0x0a0e1a, 
+      metalness: 0.9, 
+      roughness: 0.3 
+    });
+    const beamGeo = new THREE.BoxGeometry(11, 0.2, 0.2);
+
+    // Glowing vertical LED strip lines for columns
+    const ledLineGeo = new THREE.BoxGeometry(0.02, 10, 0.02);
+    const ledLineMat = new THREE.MeshBasicMaterial({ color: 0xc5a059 });
+
+    for (let zVal = -10; zVal <= 6; zVal += 4) {
+      // Left structural pillar
+      const pillarL = new THREE.Mesh(pillarGeo, pillarMat);
+      pillarL.position.set(-5, 4.5, zVal);
+      scene.add(pillarL);
+
+      // Left pillar glowing LED highlight
+      const ledL = new THREE.Mesh(ledLineGeo, ledLineMat);
+      ledL.position.set(-4.84, 4.5, zVal + 0.16);
+      scene.add(ledL);
+      
+      // Right structural pillar
+      const pillarR = new THREE.Mesh(pillarGeo, pillarMat);
+      pillarR.position.set(5, 4.5, zVal);
+      scene.add(pillarR);
+
+      // Right pillar glowing LED highlight
+      const ledR = new THREE.Mesh(ledLineGeo, ledLineMat);
+      ledR.position.set(4.84, 4.5, zVal - 0.16);
+      scene.add(ledR);
+
+      // Overhead industrial crossbeam
+      const beam = new THREE.Mesh(beamGeo, pillarMat);
+      beam.position.set(0, 9.5, zVal);
+      scene.add(beam);
+    }
+
+    // 3.3 Volumetric Light Beams (Ceiling spotlights shining down)
+    const coneGeo = new THREE.ConeGeometry(2.2, 9, 32, 1, true);
+    const coneMat = new THREE.MeshBasicMaterial({
+      color: 0xffb74d,
+      transparent: true,
+      opacity: 0.1,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+
+    const lightBeam1 = new THREE.Mesh(coneGeo, coneMat);
+    lightBeam1.position.set(-4.8, 4.5, -2);
+    lightBeam1.rotation.z = -0.12; 
+    scene.add(lightBeam1);
+
+    const lightBeam2 = new THREE.Mesh(coneGeo, coneMat);
+    lightBeam2.position.set(4.8, 4.5, -2);
+    lightBeam2.rotation.z = 0.12;
+    scene.add(lightBeam2);
+
+    // 3.4 Hanger Stand & Apparel Products under spotlights
+    // Hanger materials
+    const hangerMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.2 });
+    const hangerBaseGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.04, 16);
+    const hangerPostGeo = new THREE.CylinderGeometry(0.02, 0.02, 2.2, 8);
+    const hangerTopGeo = new THREE.BoxGeometry(0.55, 0.02, 0.06);
+
+    // Apparel Group Left (Women's Coat - Kadın Kabanı)
+    const leftApparelGroup = new THREE.Group();
+    leftApparelGroup.position.set(-4.8, 0, -2); // Directly under left spotlight
+    leftApparelGroup.rotation.y = -1.25; // Rotate to face towards the weaving loom in the center
+    scene.add(leftApparelGroup);
+
+    // Build Hanger Stand Left
+    const baseL = new THREE.Mesh(hangerBaseGeo, hangerMat);
+    baseL.position.y = -0.48;
+    leftApparelGroup.add(baseL);
+    const postL = new THREE.Mesh(hangerPostGeo, hangerMat);
+    postL.position.y = 0.6;
+    leftApparelGroup.add(postL);
+    const topL = new THREE.Mesh(hangerTopGeo, hangerMat);
+    topL.position.y = 1.7;
+    leftApparelGroup.add(topL);
+
+    // Model Women's Coat (Camel-colored long overcoat matching user request image)
+    const coatMat = new THREE.MeshStandardMaterial({ color: 0xc19a6b, roughness: 0.85 }); // Camel Brown
+    const beltMat = new THREE.MeshStandardMaterial({ color: 0x8a6233, roughness: 0.85 }); // Darker brown tied belt
+    
+    // Torso (Long flared overcoat)
+    const coatTorsoGeo = new THREE.CylinderGeometry(0.11, 0.28, 1.2, 16);
+    const coatTorso = new THREE.Mesh(coatTorsoGeo, coatMat);
+    coatTorso.position.y = 1.05;
+    leftApparelGroup.add(coatTorso);
+
+    // Collar flaps
+    const collarFlapGeo = new THREE.BoxGeometry(0.08, 0.18, 0.02);
+    const collarFlapL = new THREE.Mesh(collarFlapGeo, coatMat);
+    collarFlapL.position.set(-0.06, 1.55, 0.06);
+    collarFlapL.rotation.set(0.2, 0.2, 0.3);
+    leftApparelGroup.add(collarFlapL);
+    const collarFlapR = new THREE.Mesh(collarFlapGeo, coatMat);
+    collarFlapR.position.set(0.06, 1.55, 0.06);
+    collarFlapR.rotation.set(0.2, -0.2, -0.3);
+    leftApparelGroup.add(collarFlapR);
+
+    // Tied belt around waist
+    const beltGeo = new THREE.CylinderGeometry(0.17, 0.17, 0.06, 16);
+    const belt = new THREE.Mesh(beltGeo, beltMat);
+    belt.position.y = 1.15;
+    leftApparelGroup.add(belt);
+
+    // Sleeves
+    const coatSleeveGeo = new THREE.CylinderGeometry(0.035, 0.035, 0.6, 8);
+    const sleeveLL = new THREE.Mesh(coatSleeveGeo, coatMat);
+    sleeveLL.position.set(-0.16, 1.2, 0);
+    sleeveLL.rotation.z = 0.25;
+    leftApparelGroup.add(sleeveLL);
+    const sleeveLR = new THREE.Mesh(coatSleeveGeo, coatMat);
+    sleeveLR.position.set(0.16, 1.2, 0);
+    sleeveLR.rotation.z = -0.25;
+    leftApparelGroup.add(sleeveLR);
+
+    // Neck joint hook
+    const collarSphereGeo = new THREE.SphereGeometry(0.06, 12, 12);
+    const collarSphere = new THREE.Mesh(collarSphereGeo, coatMat);
+    collarSphere.position.set(0, 1.63, 0);
+    leftApparelGroup.add(collarSphere);
+
+
+    // Apparel Group Right (Men's Suit - Takım Elbise)
+    const rightApparelGroup = new THREE.Group();
+    rightApparelGroup.position.set(4.8, 0, -2); // Directly under right spotlight
+    rightApparelGroup.rotation.y = 1.25; // Rotate to face towards the weaving loom in the center
+    scene.add(rightApparelGroup);
+
+    // Build Hanger Stand Right
+    const baseR = new THREE.Mesh(hangerBaseGeo, hangerMat);
+    baseR.position.y = -0.48;
+    rightApparelGroup.add(baseR);
+    const postR = new THREE.Mesh(hangerPostGeo, hangerMat);
+    postR.position.y = 0.6;
+    rightApparelGroup.add(postR);
+    const topR = new THREE.Mesh(hangerTopGeo, hangerMat);
+    topR.position.y = 1.7;
+    rightApparelGroup.add(topR);
+
+    // Model Men's Suit (Navy open jacket, white shirt, black tie matching user request image)
+    const suitMat = new THREE.MeshStandardMaterial({ color: 0x162541, roughness: 0.8 }); // Midnight Navy
+    const shirtMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 }); // White shirt
+    const tieMat = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.9 }); // Black tie
+
+    // Main Jacket Torso Back
+    const suitJacketGeo = new THREE.BoxGeometry(0.36, 0.7, 0.12);
+    const suitJacket = new THREE.Mesh(suitJacketGeo, suitMat);
+    suitJacket.position.y = 1.35;
+    rightApparelGroup.add(suitJacket);
+
+    // White Shirt Insert (exposed in the chest v-neck)
+    const shirtGeo = new THREE.BoxGeometry(0.14, 0.35, 0.03);
+    const shirt = new THREE.Mesh(shirtGeo, shirtMat);
+    shirt.position.set(0, 1.48, 0.05); 
+    rightApparelGroup.add(shirt);
+
+    // Black Tie Insert
+    const tieGeo = new THREE.BoxGeometry(0.026, 0.3, 0.015);
+    const tie = new THREE.Mesh(tieGeo, tieMat);
+    tie.position.set(0, 1.42, 0.068); 
+    rightApparelGroup.add(tie);
+
+    // Left & Right Jacket Lapels (creating open-front look)
+    const lapelGeo = new THREE.BoxGeometry(0.08, 0.42, 0.03);
+    const lapelL = new THREE.Mesh(lapelGeo, suitMat);
+    lapelL.position.set(-0.09, 1.44, 0.06);
+    lapelL.rotation.set(0.1, 0.25, 0.12);
+    rightApparelGroup.add(lapelL);
+    const lapelR = new THREE.Mesh(lapelGeo, suitMat);
+    lapelR.position.set(0.09, 1.44, 0.06);
+    lapelR.rotation.set(0.1, -0.25, -0.12);
+    rightApparelGroup.add(lapelR);
+
+    // Trousers (Navy legs hanging down)
+    const suitLegGeo = new THREE.BoxGeometry(0.1, 0.8, 0.08);
+    const legL = new THREE.Mesh(suitLegGeo, suitMat);
+    legL.position.set(-0.06, 0.65, 0);
+    rightApparelGroup.add(legL);
+    const legR = new THREE.Mesh(suitLegGeo, suitMat);
+    legR.position.set(0.06, 0.65, 0);
+    rightApparelGroup.add(legR);
+
+    // Sleeves
+    const suitSleeveGeo = new THREE.CylinderGeometry(0.038, 0.038, 0.62, 8);
+    const sleeveRL = new THREE.Mesh(suitSleeveGeo, suitMat);
+    sleeveRL.position.set(-0.2, 1.35, 0);
+    sleeveRL.rotation.z = 0.12;
+    rightApparelGroup.add(sleeveRL);
+    const sleeveRR = new THREE.Mesh(suitSleeveGeo, suitMat);
+    sleeveRR.position.set(0.2, 1.35, 0);
+    sleeveRR.rotation.z = -0.12;
+    rightApparelGroup.add(sleeveRR);
+
+
+    // 3.5 Bobbin Creel (Çağlık) - Yarn rack behind the loom feeding the warp
+    const creelGroup = new THREE.Group();
+    creelGroup.position.set(0, 0.0, -9.5); 
+    scene.add(creelGroup);
+
+    const creelFrameMat = new THREE.MeshStandardMaterial({ 
+      color: 0x11163b, 
+      metalness: 0.7, 
+      roughness: 0.3 
+    });
+    const vBarGeo = new THREE.CylinderGeometry(0.04, 0.04, 3.5, 8);
+    const hBarGeo = new THREE.CylinderGeometry(0.03, 0.03, 5.6, 8);
+
+    // Build creel grid frames
+    for (let xVal = -2.2; xVal <= 2.2; xVal += 2.2) {
+      const bar = new THREE.Mesh(vBarGeo, creelFrameMat);
+      bar.position.set(xVal, 1.25, 0);
+      creelGroup.add(bar);
+    }
+    for (let yVal = 0.2; yVal <= 2.6; yVal += 0.8) {
+      const bar = new THREE.Mesh(hBarGeo, creelFrameMat);
+      bar.rotation.z = Math.PI / 2;
+      bar.position.set(0, yVal, 0);
+      creelGroup.add(bar);
+    }
+
+    // Generate yarn bobbins on the creel (more numerous and colorful)
+    const bobbinGeo = new THREE.CylinderGeometry(0.11, 0.17, 0.38, 12);
+    const bobbinColors = [0xc5a059, 0x1b204a, 0x708090, 0xd4af37, 0x3b82f6];
+    const bobbinsData = [];
+
+    for (let xVal = -2.0; xVal <= 2.0; xVal += 0.6) {
+      for (let yVal = 0.3; yVal <= 2.5; yVal += 0.5) {
+        if ((Math.abs(xVal) + yVal) % 0.4 < 0.12) continue;
+
+        const colIndex = Math.abs(Math.floor(xVal * yVal * 15)) % bobbinColors.length;
+        const bMat = new THREE.MeshStandardMaterial({ 
+          color: bobbinColors[colIndex], 
+          roughness: 0.8 
+        });
+        const bobbin = new THREE.Mesh(bobbinGeo, bMat);
+        bobbin.rotation.x = Math.PI / 2;
+        bobbin.position.set(xVal, yVal, 0);
+        creelGroup.add(bobbin);
+
+        bobbinsData.push(new THREE.Vector3(xVal, yVal, -9.5));
+      }
+    }
+
+    // 3.6 Creel Feed Threads (More prominent gold/navy threads, opacity 0.55)
+    const creelThreadsGroup = new THREE.Group();
+    scene.add(creelThreadsGroup);
+
+    bobbinsData.forEach((bobbinPos) => {
+      const rollerX = -2.7 + (5.4 * Math.random());
+      const geom = new THREE.BufferGeometry();
+      const pts = new Float32Array([
+        bobbinPos.x, bobbinPos.y, bobbinPos.z,
+        rollerX, 0.5, -6.0
+      ]);
+      geom.setAttribute('position', new THREE.BufferAttribute(pts, 3));
+      
+      const isGoldThread = Math.random() > 0.4;
+      const mat = new THREE.LineBasicMaterial({ 
+        color: isGoldThread ? 0xc5a059 : 0x1e293b, 
+        transparent: true, 
+        opacity: isGoldThread ? 0.55 : 0.35 
+      });
+      const line = new THREE.Line(geom, mat);
+      creelThreadsGroup.add(line);
+    });
+
+    // 3.7 Silhouetted Auxiliary Looms
+    const otherLoomMat = new THREE.MeshStandardMaterial({ 
+      color: 0x05070d, 
+      transparent: true, 
+      opacity: 0.35,
+      metalness: 0.6,
+      roughness: 0.4
+    });
+    const otherLoomGeo = new THREE.BoxGeometry(4.5, 1.6, 3.2);
+
+    const leftLoom = new THREE.Mesh(otherLoomGeo, otherLoomMat);
+    leftLoom.position.set(-8.5, 0.3, -2.5);
+    scene.add(leftLoom);
+
+    const rightLoom = new THREE.Mesh(otherLoomGeo, otherLoomMat);
+    rightLoom.position.set(8.5, 0.3, -2.5);
+    scene.add(rightLoom);
+
+
+    // --- 4. MAIN WEAVING LOOM ASSEMBLY (FOREGROUND) ---
     const loomGroup = new THREE.Group();
-    loomGroup.position.set(0, 0, 0);
     scene.add(loomGroup);
 
     // Rollers (Back Roller & Front Take-up Roller)
@@ -80,7 +391,7 @@ export default function WeavingLoom3D({
     frontRoller.position.set(0, -0.2, 3);
     loomGroup.add(frontRoller);
 
-    // Heald Frames (Gücü Çerçeveleri) - 2 Frames for Plain weave
+    // Heald Frames (Gücü Çerçeveleri)
     const frameGeo = new THREE.BoxGeometry(5.6, 2.5, 0.1);
     const frameWire = new THREE.EdgesGeometry(frameGeo);
     
@@ -147,7 +458,7 @@ export default function WeavingLoom3D({
     shuttleGroup.position.set(0, 0.15, -1.0);
     loomGroup.add(shuttleGroup);
 
-    // --- 4. WARP THREADS (ÇÖZGÜ İPLİKLERİ) ---
+    // --- 5. WARP THREADS (ÇÖZGÜ İPLİKLERİ) ---
     const threadCount = 90;
     const threads = [];
     
@@ -175,9 +486,8 @@ export default function WeavingLoom3D({
       });
     }
 
-    // --- 5. WOVEN FABRIC (KUMAŞ DÜZLEMİ) ---
+    // --- 6. WOVEN FABRIC (KUMAŞ DÜZLEMİ) ---
     const fabricLength = 3.0; 
-    
     const fabricGridGroup = new THREE.Group();
     loomGroup.add(fabricGridGroup);
 
@@ -199,7 +509,7 @@ export default function WeavingLoom3D({
         opacity: 0.7
       });
       const warpLine = new THREE.Line(geom, mat);
-      warpLine.userData = { isEven }; // Store properties inside userData for robust lookup
+      warpLine.userData = { isEven }; 
       fabricGridGroup.add(warpLine);
     }
 
@@ -240,14 +550,48 @@ export default function WeavingLoom3D({
     const activeWeftLine = new THREE.Line(activeWeftGeom, activeWeftMat);
     loomGroup.add(activeWeftLine);
 
-    // --- 6. CAMERA KEYFRAMES FOR SCROLL STORYTELLING ---
+    // --- RESPONSIVE SCALING HANDLER ---
+    const adjustScale = () => {
+      const w = window.innerWidth;
+      let scale = 1.0;
+      if (w < 640) {
+        scale = 0.45; // Mobile screen scale
+      } else if (w < 1024) {
+        scale = 0.70; // Tablet screen scale
+      } else {
+        scale = 1.0;  // PC scale
+      }
+      
+      loomGroup.scale.set(scale, scale, scale);
+      creelGroup.scale.set(scale, scale, scale);
+      creelThreadsGroup.scale.set(scale, scale, scale);
+      leftLoom.scale.set(scale, scale, scale);
+      rightLoom.scale.set(scale, scale, scale);
+
+      // Scale and position the apparel models dynamically to fit under shifted light cones
+      leftApparelGroup.scale.set(scale, scale, scale);
+      leftApparelGroup.position.set(-4.8 * scale, 0, -2 * scale);
+
+      rightApparelGroup.scale.set(scale, scale, scale);
+      rightApparelGroup.position.set(4.8 * scale, 0, -2 * scale);
+
+      // Adjust volumetric cones
+      lightBeam1.scale.set(scale, scale, scale);
+      lightBeam1.position.set(-4.8 * scale, 4.5 * scale, -2 * scale);
+      lightBeam2.scale.set(scale, scale, scale);
+      lightBeam2.position.set(4.8 * scale, 4.5 * scale, -2 * scale);
+    };
+
+    adjustScale();
+
+    // --- 7. CAMERA KEYFRAMES FOR SCROLL STORYTELLING ---
     const camPosition = new THREE.Vector3();
     const camTarget = new THREE.Vector3();
     
     const keyframes = [
-      { // 0. HERO: Wide isometric view
-        pos: new THREE.Vector3(5.5, 4.0, 7.5),
-        look: new THREE.Vector3(0, 0, -1.5)
+      { // 0. HERO: Wide isometric view showing full workshop space
+        pos: new THREE.Vector3(6.5, 4.8, 8.5),
+        look: new THREE.Vector3(0, 0.4, -2.0)
       },
       { // 0.25. PRECISION: Close up on heald frames splitting threads
         pos: new THREE.Vector3(2.5, 1.8, -1.8),
@@ -261,7 +605,7 @@ export default function WeavingLoom3D({
         pos: new THREE.Vector3(-1.8, 2.0, 2.5),
         look: new THREE.Vector3(0.5, 0.0, 1.2)
       },
-      { // 1.0. INTERACTIVE / DETAILS: Balanced overview, slightly from top
+      { // 1.0. INTERACTIVE / DETAILS: Balanced overview of the loom & hall
         pos: new THREE.Vector3(4.8, 3.2, 4.8),
         look: new THREE.Vector3(0, 0.2, 0)
       }
@@ -281,7 +625,7 @@ export default function WeavingLoom3D({
       return { pos, look };
     }
 
-    // --- 7. MOUSE PARALLAX SETUP ---
+    // --- 8. MOUSE PARALLAX SETUP ---
     let mouseX = 0;
     let mouseY = 0;
     
@@ -291,7 +635,7 @@ export default function WeavingLoom3D({
     };
     window.addEventListener('mousemove', handleMouseMove);
 
-    // --- 8. ANIMATION LOOP ---
+    // --- 9. ANIMATION LOOP ---
     let lastTime = 0;
     let loomTime = 0; 
     let requestID;
@@ -456,7 +800,7 @@ export default function WeavingLoom3D({
       camTarget.lerp(targetLook, 0.05);
       camera.lookAt(camTarget);
 
-      loomGroup.rotation.y = THREE.MathUtils.lerp(0, 0.1, scrollProgress);
+      loomGroup.rotation.y = THREE.MathUtils.lerp(0, 0.12, scrollProgress);
 
       renderer.render(scene, camera);
     };
@@ -469,6 +813,8 @@ export default function WeavingLoom3D({
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      
+      adjustScale();
     };
     window.addEventListener('resize', handleResize);
 
@@ -481,6 +827,7 @@ export default function WeavingLoom3D({
         containerRef.current.removeChild(renderer.domElement);
       }
       
+      // Cleanup WebGL resources
       renderer.dispose();
       rollerGeo.dispose();
       rollerMat.dispose();
@@ -498,6 +845,44 @@ export default function WeavingLoom3D({
       activeWeftGeom.dispose();
       activeWeftMat.dispose();
       
+      // Background cleanups
+      pillarGeo.dispose();
+      pillarMat.dispose();
+      beamGeo.dispose();
+      vBarGeo.dispose();
+      hBarGeo.dispose();
+      creelFrameMat.dispose();
+      bobbinGeo.dispose();
+      otherLoomGeo.dispose();
+      otherLoomMat.dispose();
+      floorHelper.dispose();
+      ledLineGeo.dispose();
+      ledLineMat.dispose();
+      coneGeo.dispose();
+      coneMat.dispose();
+
+      // Apparel cleanups
+      hangerMat.dispose();
+      hangerBaseGeo.dispose();
+      hangerPostGeo.dispose();
+      hangerTopGeo.dispose();
+      coatMat.dispose();
+      coatTorsoGeo.dispose();
+      coatSleeveGeo.dispose();
+      suitMat.dispose();
+      suitJacketGeo.dispose();
+      suitLegGeo.dispose();
+      shirtMat.dispose();
+      tieMat.dispose();
+      beltMat.dispose();
+      shirtGeo.dispose();
+      tieGeo.dispose();
+      lapelGeo.dispose();
+      collarFlapGeo.dispose();
+      beltGeo.dispose();
+      collarSphereGeo.dispose();
+      suitSleeveGeo.dispose();
+      
       threads.forEach((t) => {
         t.line.geometry.dispose();
         t.line.material.dispose();
@@ -511,6 +896,22 @@ export default function WeavingLoom3D({
       weftLinesGroup.children.forEach((c) => {
         c.geometry.dispose();
         c.material.dispose();
+      });
+      creelGroup.children.forEach((c) => {
+        if (c.geometry) c.geometry.dispose();
+        if (c.material) c.material.dispose();
+      });
+      creelThreadsGroup.children.forEach((c) => {
+        c.geometry.dispose();
+        c.material.dispose();
+      });
+      leftApparelGroup.children.forEach((c) => {
+        if (c.geometry) c.geometry.dispose();
+        if (c.material) c.material.dispose();
+      });
+      rightApparelGroup.children.forEach((c) => {
+        if (c.geometry) c.geometry.dispose();
+        if (c.material) c.material.dispose();
       });
     };
   }, []);
