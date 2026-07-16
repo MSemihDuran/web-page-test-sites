@@ -143,21 +143,23 @@ const Home = () => {
             {}
             <header className="bg-white/80 backdrop-blur-md sticky top-0 z-40 py-4 px-6 border-b border-slate-200/60 shadow-sm">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/20">
-                            A
+                    <div className="flex items-center gap-12">
+                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/20">
+                                A
+                            </div>
+                            <div>
+                                <h1 className="text-sm sm:text-base font-black tracking-tight text-slate-900">APEX B2B</h1>
+                                <span className="text-[9px] uppercase font-black tracking-widest text-indigo-600 block">FURNITURE MARKET</span>
+                            </div>
                         </div>
-                        <div>
-                            <h1 className="text-sm sm:text-base font-black tracking-tight text-slate-900">APEX B2B</h1>
-                            <span className="text-[9px] uppercase font-black tracking-widest text-indigo-600 block">FURNITURE MARKET</span>
-                        </div>
-                    </div>
 
-                    <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-500">
-                        <a href="#home" onClick={(e) => handleScroll(e, 'home')} className="hover:text-indigo-600 transition-colors">Anasayfa</a>
-                        <a href="#about" onClick={(e) => handleScroll(e, 'about')} className="hover:text-indigo-600 transition-colors">Hakkımızda</a>
-                        <a href="#contact" onClick={(e) => handleScroll(e, 'contact')} className="hover:text-indigo-600 transition-colors">İletişim</a>
-                    </nav>
+                        <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-500">
+                            <a href="#home" onClick={(e) => handleScroll(e, 'home')} className="inline-block hover:text-indigo-600 hover:scale-110 active:scale-95 transition-all duration-300 transform">{t('nav_home')}</a>
+                            <a href="#about" onClick={(e) => handleScroll(e, 'about')} className="inline-block hover:text-indigo-600 hover:scale-110 active:scale-95 transition-all duration-300 transform">{t('nav_about')}</a>
+                            <a href="#contact" onClick={(e) => handleScroll(e, 'contact')} className="inline-block hover:text-indigo-600 hover:scale-110 active:scale-95 transition-all duration-300 transform">{t('nav_contact')}</a>
+                        </nav>
+                    </div>
 
                     <div className="flex items-center gap-4 text-xs font-bold">
                         <button 
