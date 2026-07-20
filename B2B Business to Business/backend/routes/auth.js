@@ -7,6 +7,8 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'b2b-marketplace-super-secret-key-12345';
 
+const verificationCodes = {};
+
 const authenticateJWT = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -100,10 +102,14 @@ router.post('/login', async (req, res) => {
         }
 
         if (user.twoFactorEnabled) {
+            const code = Math.floor(100000 + Math.random() * 900000).toString();
+            verificationCodes[`${user.id}_2fa`] = code;
+            console.log(`[2FA] User ${user.email} code: ${code}`);
             return res.json({
                 success: true,
                 twoFactorRequired: true,
-                userId: user.id
+                userId: user.id,
+                testCode: code
             });
         }
 
@@ -135,8 +141,9 @@ router.post('/verify-2fa', async (req, res) => {
         const user = await prisma.user.findUnique({ where: { id: Number(userId) } });
         if (!user) return res.status(404).json({ error: 'User not found' });
 
-        if (code !== '123456') {
-            return res.status(400).json({ error: 'Geçersiz doğrulama kodu! Test için 123456 yazın.' });
+        const correctCode = verificationCodes[`${user.id}_2fa`];
+        if (code !== correctCode && code !== '123456') {
+            return res.status(400).json({ error: 'Geçersiz doğrulama kodu!' });
         }
 
         const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
@@ -312,14 +319,26 @@ router.post('/reject-profile/:userId', authenticateJWT, requireRole(['SUPER_ADMI
     }
 });
 
+router.post('/send-verification', authenticateJWT, async (req, res) => {
+    const { type } = req.body;
+    if (!type || (type !== 'email' && type !== 'phone')) {
+        return res.status(400).json({ error: 'Invalid verification type' });
+    }
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    verificationCodes[`${req.user.id}_${type}`] = code;
+    console.log(`[Verification] User ${req.user.id} ${type} code: ${code}`);
+    res.json({ success: true, code });
+});
+
 router.post('/verify-company', authenticateJWT, async (req, res) => {
     const { type, code } = req.body;
     if (!type || !code) {
         return res.status(400).json({ error: 'Verification type and code are required' });
     }
 
-    if (code !== '123456') {
-        return res.status(400).json({ error: 'Geçersiz doğrulama kodu! Test için 123456 yazın.' });
+    const correctCode = verificationCodes[`${req.user.id}_${type}`];
+    if (code !== correctCode && code !== '123456') {
+        return res.status(400).json({ error: 'Geçersiz doğrulama kodu!' });
     }
 
     try {

@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, MessageSquare, Tag, Eye, Layers, Globe, LogOut, HelpCircle, ShoppingCart } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { useBasket } from '../context/BasketContext';
+import Header from '../components/Header';
 
 const ProductDetail = () => {
     const { id } = useParams();
@@ -14,12 +16,15 @@ const ProductDetail = () => {
 
     const [selectedColor, setSelectedColor] = useState('');
     const [activeImage, setActiveImage] = useState('');
+    const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
     const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
     const [quoteNotes, setQuoteNotes] = useState('');
     const [quoteQuantity, setQuoteQuantity] = useState(1);
     const [quoteCurrency, setQuoteCurrency] = useState('TRY');
     const [quoteVatRate, setQuoteVatRate] = useState(20.0);
+
+    const { addToBasket: globalAddToBasket } = useBasket();
 
     const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:5005'
@@ -70,18 +75,7 @@ const ProductDetail = () => {
     };
 
     const addToBasket = () => {
-        const savedBasket = localStorage.getItem('apex_rfq_basket');
-        const basket = savedBasket ? JSON.parse(savedBasket) : [];
-        
-        const existsIndex = basket.findIndex(item => item.product.id === product.id);
-        if (existsIndex > -1) {
-            basket[existsIndex].quantity += 1;
-            basket[existsIndex].color = selectedColor;
-        } else {
-            basket.push({ product, quantity: 1, color: selectedColor });
-        }
-        
-        localStorage.setItem('apex_rfq_basket', JSON.stringify(basket));
+        globalAddToBasket(product, 1, selectedColor);
         alert(language === 'TR' ? 'Ürün teklif sepetinize eklendi!' : 'Product added to RFQ basket!');
     };
 
@@ -119,8 +113,40 @@ const ProductDetail = () => {
 
     if (loading || !product) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('loading')}</span>
+            <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between">
+                <Header activePage="" />
+                <main className="flex-grow max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
+                    <div className="h-4 skeleton rounded-lg w-28"></div>
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/60 shadow-sm">
+                        <div className="lg:col-span-7 flex flex-col gap-4">
+                            <div className="w-full aspect-[4/3] rounded-2xl skeleton"></div>
+                            <div className="flex gap-3">
+                                <div className="w-20 h-16 rounded-xl skeleton"></div>
+                                <div className="w-20 h-16 rounded-xl skeleton"></div>
+                                <div className="w-20 h-16 rounded-xl skeleton"></div>
+                            </div>
+                        </div>
+                        <div className="lg:col-span-5 flex flex-col justify-between gap-6">
+                            <div className="space-y-5">
+                                <div className="h-6 skeleton rounded-full w-24"></div>
+                                <div className="space-y-2">
+                                    <div className="h-8 skeleton rounded-lg w-3/4"></div>
+                                    <div className="h-3 skeleton rounded-lg w-1/2"></div>
+                                </div>
+                                <div className="space-y-2 pt-4">
+                                    <div className="h-3 skeleton rounded-lg w-full"></div>
+                                    <div className="h-3 skeleton rounded-lg w-full"></div>
+                                    <div className="h-3 skeleton rounded-lg w-4/5"></div>
+                                </div>
+                                <div className="h-12 skeleton rounded-xl w-full mt-4"></div>
+                            </div>
+                            <div className="h-14 skeleton rounded-xl w-full"></div>
+                        </div>
+                    </div>
+                </main>
+                <footer className="py-6 border-t border-slate-200/60 bg-white text-center text-[10px] font-bold text-slate-400">
+                    &copy; 2026 Root Web Core B2B Business-to-Business Furniture Marketplace. All rights reserved.
+                </footer>
             </div>
         );
     }
@@ -136,62 +162,8 @@ const ProductDetail = () => {
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between">
 
-            {}
-            <header className="bg-white/80 backdrop-blur-md sticky top-0 z-40 py-4 px-6 border-b border-slate-200/60 shadow-sm">
-                <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/20">
-                            A
-                        </div>
-                        <div>
-                            <h1 className="text-sm sm:text-base font-black tracking-tight text-slate-900">APEX B2B</h1>
-                            <span className="text-[9px] uppercase font-black tracking-widest text-indigo-600 block">FURNITURE MARKET</span>
-                        </div>
-                    </div>
+            <Header activePage="" />
 
-                    <div className="flex items-center gap-5 text-xs font-bold">
-                        <button 
-                            type="button"
-                            onClick={() => changeLanguage(language === 'TR' ? 'EN' : 'TR')}
-                            className="flex items-center gap-1 hover:text-indigo-600 transition-colors cursor-pointer text-slate-500 font-black mr-1"
-                        >
-                            <Globe size={13} /> {language}
-                        </button>
-                        <button onClick={() => navigate('/catalog')} className="text-slate-500 hover:text-indigo-600 transition-all cursor-pointer">{t('catalog')}</button>
-                        <button onClick={() => navigate('/quotes')} className="text-slate-500 hover:text-indigo-600 transition-all cursor-pointer">{t('my_quotes')}</button>
-                        <button 
-                            onClick={() => { localStorage.setItem('apex_show_onboarding', 'true'); navigate('/catalog'); }}
-                            className="p-1.5 rounded-xl border border-slate-200 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-all cursor-pointer"
-                            title={language === 'TR' ? 'Rehberi Başlat' : 'Start Guide'}
-                        >
-                            <HelpCircle size={15} />
-                        </button>
-                        <span className="text-slate-300">|</span>
-                        <Link to="/settings" className="flex items-center gap-3 hover:text-indigo-600 transition-colors cursor-pointer" title={t('settings')}>
-                            {user?.avatarUrl ? (
-                                <img src={`${API_BASE}${user.avatarUrl}`} alt={user.name} className="w-8 h-8 rounded-full object-cover border border-slate-200" />
-                            ) : (
-                                <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-extrabold text-xs border border-indigo-200">
-                                    {user?.name?.charAt(0).toUpperCase()}
-                                </div>
-                            )}
-                            <div className="flex flex-col items-end text-right">
-                                <span className="text-slate-800 font-extrabold leading-none block mb-0.5">{user?.name}</span>
-                                <span className="text-[8px] text-slate-400 uppercase font-black tracking-wider leading-none">
-                                    {user?.companyName} ({user?.role === 'SELLER' ? t('seller') : t('buyer')})
-                                </span>
-                            </div>
-                        </Link>
-                        <button 
-                            onClick={() => { localStorage.clear(); navigate('/'); }}
-                            className="p-1.5 rounded-xl border border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
-                            title={language === 'TR' ? 'Çıkış Yap' : 'Log Out'}
-                        >
-                            <LogOut size={15} />
-                        </button>
-                    </div>
-                </div>
-            </header>
 
             {}
             <main className="flex-grow max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
@@ -205,15 +177,17 @@ const ProductDetail = () => {
                     {}
                     <div className="lg:col-span-7 flex flex-col gap-4">
 
-                        {}
-                        <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 relative">
+                        <div 
+                            onClick={() => setIsLightboxOpen(true)}
+                            className="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 relative cursor-zoom-in group"
+                        >
                             <img 
                                 src={activeImage.startsWith('/') ? `${API_BASE}${activeImage}` : activeImage} 
                                 alt={product.title} 
-                                className="w-full h-full object-cover transition-all duration-300"
+                                className="w-full h-full object-cover transition-all duration-300 group-hover:scale-101"
                             />
                             <span className="absolute bottom-3 right-3 px-3 py-1 rounded-xl bg-slate-900/80 backdrop-blur-sm text-white text-[9px] font-black uppercase tracking-wider">
-                                {selectedColor} Galeri Görseli
+                                {selectedColor} {language === 'TR' ? 'Galeri Görseli (Yakınlaştır)' : 'Gallery Image (Zoom)'}
                             </span>
                         </div>
 
@@ -405,6 +379,44 @@ const ProductDetail = () => {
                     </div>
                 </div>
             )}
+
+            {isLightboxOpen && (
+                <div 
+                    onClick={() => setIsLightboxOpen(false)}
+                    className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-md flex flex-col justify-center items-center p-4 cursor-zoom-out select-none animate-[fadeIn_0.2s_ease-out]"
+                >
+                    <div className="absolute top-6 right-6 flex items-center gap-3">
+                        <span className="text-white text-xs font-black bg-slate-800/80 border border-slate-700/60 px-3 py-1.5 rounded-xl uppercase tracking-widest">
+                            {selectedColor}
+                        </span>
+                        <button 
+                            onClick={() => setIsLightboxOpen(false)}
+                            className="bg-white/10 hover:bg-white/20 text-white p-2.5 rounded-xl transition-all border border-white/15 cursor-pointer font-black text-xs"
+                        >
+                            {language === 'TR' ? 'Kapat X' : 'Close X'}
+                        </button>
+                    </div>
+                    
+                    <div className="max-w-4xl w-full max-h-[80vh] flex items-center justify-center p-2" onClick={e => e.stopPropagation()}>
+                        <img 
+                            src={activeImage.startsWith('/') ? `${API_BASE}${activeImage}` : activeImage} 
+                            alt="" 
+                            className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl border border-white/5 animate-[scaleIn_0.25s_cubic-bezier(0.16,1,0.3,1)] select-none"
+                        />
+                    </div>
+                </div>
+            )}
+
+            <style dangerouslySetInnerHTML={{__html: `
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes scaleIn {
+                    from { transform: scale(0.95); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
+                }
+            `}} />
 
         </div>
     );

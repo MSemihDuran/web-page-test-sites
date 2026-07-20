@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Syne:wght@700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', sans-serif;
+  --font-outfit: 'Outfit', sans-serif;
+  --font-syne: 'Syne', sans-serif;
+  
+  /* Temiz Enerji Renk Paleti (Slate & Teal/Green) */
+  --color-brand-bg: #070913;          /* Derin obsidyen yeşilimsi siyah */
+  --color-brand-navy: #0f172a;        /* Slate lacivert */
+  --color-brand-accent: #00f5d4;      /* Canlı enerji turkuazı */
+  --color-brand-accent-glow: #70e000; /* Enerji yeşili parlama */
+  --color-brand-white: #f8fafc;       /* Temiz beyaz */
+  --color-brand-card: rgba(15, 23, 42, 0.35);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    background-color: #070913;
+    color: #f8fafc;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #070913;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #0f172a;
+    border-radius: 4px;
+    border: 2px solid #070913;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #00f5d4;
+  }
+}
+
+.text-clip-gradient {
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  display: inline-block;
+}
+
+/* Glassmorphism ve Lüks Efekt Sınıfları */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+}
+
+.glass-panel-accent {
+  background: rgba(0, 245, 212, 0.03);
+  border: 1px solid rgba(0, 245, 212, 0.15);
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+}
+
+.text-glow-accent {
+  text-shadow: 0 0 20px rgba(0, 245, 212, 0.35);
+}
+
+.text-glow-white {
+  text-shadow: 0 0 15px rgba(248, 250, 252, 0.2);
+}
+
+/* Akışkan arka plan animasyonu */
+@keyframes fluid-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-fluid-accent {
+  background: linear-gradient(-45deg, #00f5d4, #70e000, #0f172a, #00f5d4);
+  background-size: 400% 400%;
+  animation: fluid-flow 12s ease infinite;
+}
+
+/* Noise overlay */
+.noise-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  content: "";
+  opacity: 0.02;
+  pointer-events: none;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}

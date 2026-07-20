@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { useLanguage } from './LanguageContext';
 
 const SocketContext = createContext();
 
 export const SocketProvider = ({ children }) => {
     const { token, user } = useAuth();
+    const { language } = useLanguage();
     const [socket, setSocket] = useState(null);
     const [notifications, setNotifications] = useState([]);
 
@@ -75,6 +77,37 @@ export const SocketProvider = ({ children }) => {
         };
     }, [token, user]);
 
+    const renderNotificationMessage = (notif) => {
+        if (notif.message) return notif.message;
+        
+        const args = notif.messageArgs || [];
+        switch (notif.messageKey) {
+            case 'notif_new_quote':
+                return language === 'TR'
+                    ? `${args[0]} (${args[1]}) adlı firmadan '${args[2]}' ürünü için yeni bir teklif talebi geldi!`
+                    : `New quote request received from ${args[0]} (${args[1]}) for product '${args[2]}'!`;
+            case 'notif_tracking_updated':
+                return language === 'TR'
+                    ? `'${args[0]}' siparişinizin durumu güncellendi: ${args[1]}`
+                    : `Your order status for '${args[0]}' has been updated to: ${args[1]}`;
+            case 'notif_offer_made':
+                return language === 'TR'
+                    ? `${args[0]} firması '${args[1]}' ürünü için fiyat teklifi verdi: ${args[2]} ${args[3]}`
+                    : `Company ${args[0]} offered a price quote for product '${args[1]}': ${args[2]} ${args[3]}`;
+            case 'notif_status_changed':
+                const actionLabel = language === 'TR'
+                    ? (args[2] === 'APPROVED' ? 'onayladı' : 'reddetti')
+                    : (args[2] === 'APPROVED' ? 'approved' : 'rejected');
+                return language === 'TR'
+                    ? `${args[0]} firması '${args[1]}' ürünü için verdiğiniz fiyat teklifini ${actionLabel}!`
+                    : `Company ${args[0]} has ${actionLabel} your price quote proposal for '${args[1]}'!`;
+            case 'notif_new_chat_message':
+                return `${args[0]}: ${args[1]}`;
+            default:
+                return language === 'TR' ? 'Yeni bir güncelleme var' : 'There is a new update';
+        }
+    };
+
     const removeNotification = (id) => {
         setNotifications(prev => prev.filter(n => n.id !== id));
     };
@@ -96,12 +129,12 @@ export const SocketProvider = ({ children }) => {
                         <div className="absolute top-0 left-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-600 animate-[progress_6s_linear_forwards] w-full"></div>
                         <div className="flex justify-between items-start gap-2 pt-1">
                             <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest block">
-                                {notif.type === 'NEW_QUOTE' && 'YENİ TEKLİF TALEBİ'}
-                                {notif.type === 'OFFER_MADE' && 'YENİ FİYAT TEKLİFİ'}
-                                {notif.type === 'STATUS_CHANGED' && 'TEKLİF DURUM GÜNCELLEMESİ'}
-                                {notif.type === 'NEW_CHAT_MESSAGE' && 'YENİ MESAJ'}
-                                {notif.type === 'TRACKING_UPDATED' && 'SİPARİŞ DURUMU GÜNCELLEMESİ'}
-                                {!notif.type && 'BİLDİRİM'}
+                                {notif.type === 'NEW_QUOTE' && (language === 'TR' ? 'YENİ TEKLİF TALEBİ' : 'NEW QUOTE REQUEST')}
+                                {notif.type === 'OFFER_MADE' && (language === 'TR' ? 'YENİ FİYAT TEKLİFİ' : 'NEW PRICE OFFER')}
+                                {notif.type === 'STATUS_CHANGED' && (language === 'TR' ? 'TEKLİF DURUM GÜNCELLEMESİ' : 'QUOTE STATUS UPDATE')}
+                                {notif.type === 'NEW_CHAT_MESSAGE' && (language === 'TR' ? 'YENİ MESAJ' : 'NEW MESSAGE')}
+                                {notif.type === 'TRACKING_UPDATED' && (language === 'TR' ? 'SİPARİŞ DURUMU GÜNCELLEMESİ' : 'ORDER TIMELINE UPDATE')}
+                                {!notif.type && (language === 'TR' ? 'BİLDİRİM' : 'NOTIFICATION')}
                             </span>
                             <button
                                 onClick={(e) => {
@@ -110,11 +143,11 @@ export const SocketProvider = ({ children }) => {
                                 }}
                                 className="text-slate-400 hover:text-white font-extrabold text-[10px] bg-slate-800/80 px-2 py-0.5 rounded-lg border border-slate-700/60 cursor-pointer"
                             >
-                                Kapat
+                                {language === 'TR' ? 'Kapat' : 'Close'}
                             </button>
                         </div>
                         <p className="text-xs font-semibold leading-relaxed text-slate-100">
-                            {notif.message}
+                            {renderNotificationMessage(notif)}
                         </p>
                     </div>
                 ))}

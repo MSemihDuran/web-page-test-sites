@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Syne:wght@700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', sans-serif;
+  --font-outfit: 'Outfit', sans-serif;
+  --font-syne: 'Syne', sans-serif;
+  
+  /* Biyoteknoloji & Dikey Tarım Renk Paleti (Green & UV Purple) */
+  --color-brand-bg: #030704;          /* Biyo-obsidyen derin yeşil siyah */
+  --color-brand-navy: #091a0f;        /* Biyo-orman yeşili */
+  --color-brand-accent: #10b981;      /* Canlı bitki klorofil yeşili */
+  --color-brand-accent-glow: #a855f7; /* UV büyüme ışığı moru */
+  --color-brand-white: #f0fdf4;       /* Nane beyazı */
+  --color-brand-card: rgba(9, 26, 15, 0.35);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    background-color: #030704;
+    color: #f0fdf4;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #030704;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #091a0f;
+    border-radius: 4px;
+    border: 2px solid #030704;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #10b981;
+  }
+}
+
+.text-clip-gradient {
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  display: inline-block;
+}
+
+/* Glassmorphism ve Lüks Efekt Sınıfları */
+.glass-panel {
+  background: rgba(9, 26, 15, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+}
+
+.glass-panel-accent {
+  background: rgba(16, 185, 129, 0.03);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+}
+
+.text-glow-accent {
+  text-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
+}
+
+.text-glow-white {
+  text-shadow: 0 0 15px rgba(240, 253, 244, 0.2);
+}
+
+/* Akışkan arka plan animasyonu */
+@keyframes fluid-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-fluid-accent {
+  background: linear-gradient(-45deg, #10b981, #a855f7, #091a0f, #10b981);
+  background-size: 400% 400%;
+  animation: fluid-flow 12s ease infinite;
+}
+
+/* Noise overlay */
+.noise-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  content: "";
+  opacity: 0.02;
+  pointer-events: none;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}

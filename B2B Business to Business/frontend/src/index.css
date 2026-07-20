@@ -13,7 +13,18 @@ body {
   color: #0f172a;
   margin: 0;
   min-height: 100vh;
-  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: loading-skeleton 1.5s infinite ease-in-out;
+}
+
+@keyframes loading-skeleton {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 ::-webkit-scrollbar {

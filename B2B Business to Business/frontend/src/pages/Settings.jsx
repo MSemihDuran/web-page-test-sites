@@ -8,6 +8,7 @@ import {
 
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import Header from '../components/Header';
 
 const Settings = () => {
     const navigate = useNavigate();
@@ -268,37 +269,47 @@ const Settings = () => {
         localStorage.setItem('apex_email_alerts', nextVal ? 'true' : 'false');
     };
 
-    const triggerVerificationCode = (type) => {
+    const triggerVerificationCode = async (type) => {
         setVerificationModal(type);
         setVerificationCode('');
-        alert(`Test onay kodunuz SMS/E-posta ile gönderildi! Test Kodu: 123456`);
-    };
-
-    const handleVerifyMockCode = async (e) => {
-        e.preventDefault();
-        if (verificationCode !== '123456') {
-            alert('Hatalı kod girdiniz! Lütfen test kodu olarak 123456 girin.');
-            return;
-        }
-
-        const isEmail = verificationModal === 'email';
-        const updatePayload = isEmail 
-            ? { companyEmailVerified: true } 
-            : { companyPhoneVerified: true };
-
         try {
-            const res = await fetch(`${API_BASE}/api/auth/profile`, {
-                method: 'PUT',
+            const res = await fetch(`${API_BASE}/api/auth/send-verification`, {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(updatePayload)
+                body: JSON.stringify({ type })
             });
             if (res.ok) {
-                alert(`${isEmail ? 'Firma E-Postası' : 'Firma Telefonu'} başarıyla doğrulandı!`);
+                const data = await res.json();
+                alert(language === 'TR'
+                    ? `Test onay kodunuz SMS/E-posta ile gönderildi! Test Kodu: ${data.code}`
+                    : `Your test verification code has been sent! Test Code: ${data.code}`);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleVerifyMockCode = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await fetch(`${API_BASE}/api/auth/verify-company`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ type: verificationModal, code: verificationCode })
+            });
+            if (res.ok) {
+                alert(verificationModal === 'email' ? 'Firma E-Postası başarıyla doğrulandı!' : 'Firma Telefonu başarıyla doğrulandı!');
                 setVerificationModal(null);
                 fetchUserProfile();
+            } else {
+                const errData = await res.json();
+                alert(errData.error || 'Doğrulama başarısız.');
             }
         } catch (err) {
             console.error(err);
@@ -555,63 +566,7 @@ const Settings = () => {
         <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between">
 
             {}
-            <header className="bg-white/80 backdrop-blur-md sticky top-0 z-40 py-4 px-6 border-b border-slate-200/60 shadow-sm">
-                <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <Link to="/" className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/20">
-                            A
-                        </div>
-                        <div>
-                            <h1 className="text-sm sm:text-base font-black tracking-tight text-slate-900">APEX B2B</h1>
-                            <span className="text-[9px] uppercase font-black tracking-widest text-indigo-600 block">FURNITURE MARKET</span>
-                        </div>
-                    </Link>
-
-                    <div className="flex items-center gap-6 text-xs font-bold">
-                        <button 
-                            type="button"
-                            onClick={() => changeLanguage(language === 'TR' ? 'EN' : 'TR')}
-                            className="flex items-center gap-1 hover:text-indigo-600 transition-colors cursor-pointer text-slate-500 font-black mr-1"
-                        >
-                            <Globe size={13} /> {language}
-                        </button>
-                        <Link to="/catalog" className="text-slate-500 hover:text-indigo-600 transition-all cursor-pointer">{t('catalog')}</Link>
-                        <Link to="/quotes" className="text-slate-500 hover:text-indigo-600 transition-all cursor-pointer">{t('my_quotes')}</Link>
-                        <button 
-                            onClick={() => { localStorage.setItem('apex_show_onboarding', 'true'); navigate('/catalog'); }}
-                            className="p-1.5 rounded-xl border border-slate-200 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-all cursor-pointer"
-                            title={language === 'TR' ? 'Rehberi Başlat' : 'Start Guide'}
-                        >
-                            <HelpCircle size={15} />
-                        </button>
-
-                        <span className="text-slate-300">|</span>
-
-                        <Link to="/settings" className="flex items-center gap-3 hover:text-indigo-600 transition-all cursor-pointer" title={t('settings')}>
-                            {user.avatarUrl ? (
-                                <img src={`${API_BASE}${user.avatarUrl}`} alt={user.name} className="w-8 h-8 rounded-full object-cover border-2 border-indigo-600/30" />
-                            ) : (
-                                <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-extrabold text-xs border border-indigo-200">
-                                    {user.name.charAt(0).toUpperCase()}
-                                </div>
-                            )}
-                            <div className="flex flex-col items-end text-right">
-                                <span className="text-slate-800 font-extrabold leading-none block mb-0.5">{user.name}</span>
-                                <span className="text-[8px] text-slate-400 uppercase font-black tracking-wider leading-none">
-                                    {user.companyName || (language === 'TR' ? 'Bireysel' : 'Individual')} ({user.role === 'SELLER' ? t('seller') : t('buyer')})
-                                </span>
-                            </div>
-                        </Link>
-                        <button 
-                            onClick={() => { authLogout(); navigate('/'); }}
-                            className="p-1.5 rounded-xl border border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
-                            title={language === 'TR' ? 'Çıkış Yap' : 'Log Out'}
-                        >
-                            <LogOut size={15} />
-                        </button>
-                    </div>
-                </div>
-            </header>
+            <Header activePage="" />
 
             {}
             <main className="flex-grow max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col gap-6">

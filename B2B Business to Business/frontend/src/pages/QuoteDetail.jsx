@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Send, CheckCircle, XCircle, Clock, Globe, LogOut, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Send, CheckCircle, XCircle, Clock, Globe, LogOut, HelpCircle, Paperclip } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import Header from '../components/Header';
 
 const QuoteDetail = () => {
     const { id } = useParams();
@@ -184,6 +185,37 @@ const QuoteDetail = () => {
         }
     };
 
+    const handleMockAttachmentUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        alert(language === 'TR' 
+            ? `${file.name} belgesi yükleniyor...` 
+            : `Uploading document ${file.name}...`);
+
+        setTimeout(async () => {
+            try {
+                const res = await fetch(`${API_BASE}/api/quotes/${id}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ 
+                        text: language === 'TR'
+                            ? `[Eklenti Dosyası: ${file.name} (Toptan Fiyat Listesi/Şartname)]`
+                            : `[Attached File: ${file.name} (Wholesale Price List/Specs)]`
+                    })
+                });
+                if (!res.ok) {
+                    alert('Mock upload failed.');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }, 1000);
+    };
+
     const getStatusStyle = (status) => {
         switch (status) {
             case 'PENDING': return 'border-amber-200 text-amber-700 bg-amber-50';
@@ -196,10 +228,10 @@ const QuoteDetail = () => {
 
     const getStatusLabel = (status) => {
         switch (status) {
-            case 'PENDING': return 'Müşteri Talebi (Fiyat Bekleniyor)';
-            case 'OFFERED': return 'Fiyat Teklifi İletildi';
-            case 'APPROVED': return 'Teklif Onaylandı (Anlaşma Sağlandı)';
-            case 'REJECTED': return 'Teklif Reddedildi';
+            case 'PENDING': return language === 'TR' ? 'Müşteri Talebi (Fiyat Bekleniyor)' : 'Buyer Request (Awaiting Quote)';
+            case 'OFFERED': return language === 'TR' ? 'Fiyat Teklifi İletildi' : 'Price Quote Offered';
+            case 'APPROVED': return language === 'TR' ? 'Teklif Onaylandı (Anlaşma Sağlandı)' : 'Quote Approved (Deal Struck)';
+            case 'REJECTED': return language === 'TR' ? 'Teklif Reddedildi' : 'Quote Rejected';
             default: return status;
         }
     };
@@ -209,62 +241,7 @@ const QuoteDetail = () => {
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between">
 
-            {}
-            <header className="bg-white/80 backdrop-blur-md sticky top-0 z-40 py-4 px-6 border-b border-slate-200/60 shadow-sm">
-                <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/20">
-                            A
-                        </div>
-                        <div>
-                            <h1 className="text-sm sm:text-base font-black tracking-tight text-slate-900">APEX B2B</h1>
-                            <span className="text-[9px] uppercase font-black tracking-widest text-indigo-600 block">FURNITURE MARKET</span>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-5 text-xs font-bold">
-                        <button 
-                            type="button"
-                            onClick={() => changeLanguage(language === 'TR' ? 'EN' : 'TR')}
-                            className="flex items-center gap-1 hover:text-indigo-600 transition-colors cursor-pointer text-slate-500 font-black mr-1"
-                        >
-                            <Globe size={13} /> {language}
-                        </button>
-                        <Link to="/catalog" className="text-slate-500 hover:text-indigo-600 transition-all">{t('catalog')}</Link>
-                        <Link to="/quotes" className="text-slate-500 hover:text-indigo-600 transition-all">{t('my_quotes')}</Link>
-                        <button 
-                            onClick={() => { localStorage.setItem('apex_show_onboarding', 'true'); navigate('/catalog'); }}
-                            className="p-1.5 rounded-xl border border-slate-200 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-all cursor-pointer"
-                            title={language === 'TR' ? 'Rehberi Başlat' : 'Start Guide'}
-                        >
-                            <HelpCircle size={15} />
-                        </button>
-                        <span className="text-slate-300">|</span>
-                        <Link to="/settings" className="flex items-center gap-3 hover:text-indigo-600 transition-colors cursor-pointer" title={t('settings')}>
-                            {user.avatarUrl ? (
-                                <img src={`${API_BASE}${user.avatarUrl}`} alt={user.name} className="w-8 h-8 rounded-full object-cover border border-slate-200" />
-                            ) : (
-                                <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-extrabold text-xs border border-indigo-200">
-                                    {user.name.charAt(0).toUpperCase()}
-                                </div>
-                            )}
-                            <div className="flex flex-col items-end text-right">
-                                <span className="text-slate-800 font-extrabold leading-none block mb-0.5">{user.name}</span>
-                                <span className="text-[8px] text-slate-400 uppercase font-black tracking-wider leading-none">
-                                    {user.companyName} ({user.role === 'SELLER' ? t('seller') : t('buyer')})
-                                </span>
-                            </div>
-                        </Link>
-                        <button 
-                            onClick={() => { localStorage.clear(); navigate('/'); }}
-                            className="p-1.5 rounded-xl border border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
-                            title={language === 'TR' ? 'Çıkış Yap' : 'Log Out'}
-                        >
-                            <LogOut size={15} />
-                        </button>
-                    </div>
-                </div>
-            </header>
+            <Header activePage="" />
 
             {}
             <main className="flex-grow max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
@@ -321,7 +298,7 @@ const QuoteDetail = () => {
                                 const currentIndex = stageOrder.indexOf(quote.trackingStage || 'RECEIVED');
                                 const isCompleted = idx < currentIndex;
                                 const isActive = idx === currentIndex;
-                                const isInteractive = user.role === 'SELLER' || user.role === 'SUPER_ADMIN';
+                                const isInteractive = user.role === 'SELLER' || user.role === 'SUPER_ADMIN' || (user.role === 'BUYER' && item.stage === 'DELIVERED' && quote.trackingStage === 'SHIPPED');
 
                                 return (
                                     <div 
@@ -335,13 +312,15 @@ const QuoteDetail = () => {
                                                     ? 'bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-500/20' 
                                                     : isActive 
                                                         ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-600/30 scale-110' 
-                                                        : 'bg-white border-slate-300 text-slate-400 group-hover:border-slate-400'
+                                                        : isInteractive
+                                                            ? 'bg-indigo-50 border-indigo-300 text-indigo-600 border-dashed animate-pulse'
+                                                            : 'bg-white border-slate-300 text-slate-400 group-hover:border-slate-400'
                                             }`}
                                         >
                                             {isCompleted ? '✓' : idx + 1}
                                         </div>
                                         <span className={`text-[10px] font-black tracking-tight text-center ${
-                                            isActive ? 'text-indigo-600' : isCompleted ? 'text-emerald-600 font-bold' : 'text-slate-400'
+                                            isActive ? 'text-indigo-600' : isCompleted ? 'text-emerald-600 font-bold' : isInteractive ? 'text-indigo-600 animate-pulse' : 'text-slate-400'
                                         }`}>
                                             {language === 'TR' ? item.labelTr : item.labelEn}
                                         </span>
@@ -349,6 +328,25 @@ const QuoteDetail = () => {
                                 );
                             })}
                         </div>
+
+                        {quote.trackingStage === 'SHIPPED' && user.role === 'BUYER' && (
+                            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4 mt-4">
+                                <div className="text-left">
+                                    <h4 className="text-xs font-black text-indigo-950">
+                                        {language === 'TR' ? 'Siparişiniz Yola Çıktı!' : 'Your Order is Shipped!'}
+                                    </h4>
+                                    <p className="text-[10px] text-indigo-700 font-semibold leading-relaxed mt-0.5">
+                                        {language === 'TR' ? 'Ürünleriniz elinize ulaştıysa aşağıdaki butona tıklayarak siparişi tamamlayabilirsiniz.' : 'If you have received the items, please click the button below to confirm receipt.'}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => handleUpdateTrackingStage('DELIVERED')}
+                                    className="py-2 px-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-98 shadow-md shadow-indigo-600/10"
+                                >
+                                    {language === 'TR' ? 'Teslim Aldım ✓' : 'Confirm Delivery ✓'}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -542,6 +540,17 @@ const QuoteDetail = () => {
 
                         {}
                         <form onSubmit={handleSendMessage} className="border-t border-slate-200/80 p-4 flex gap-2 bg-slate-50/50">
+                            <label className={`p-3 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-600 transition-all flex items-center justify-center cursor-pointer shadow-sm ${
+                                (quote.status === 'APPROVED' || quote.status === 'REJECTED') ? 'opacity-30 cursor-not-allowed' : ''
+                            }`} title={language === 'TR' ? 'Dosya Ekle' : 'Add File'}>
+                                <Paperclip size={15} />
+                                <input 
+                                    type="file" 
+                                    className="hidden" 
+                                    disabled={quote.status === 'APPROVED' || quote.status === 'REJECTED'} 
+                                    onChange={handleMockAttachmentUpload}
+                                />
+                            </label>
                             <input 
                                 type="text"
                                 value={messageInput}

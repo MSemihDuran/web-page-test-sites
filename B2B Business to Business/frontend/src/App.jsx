@@ -12,6 +12,7 @@ import Settings from './pages/Settings';
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
+import { BasketProvider } from './context/BasketContext';
 
 const ProtectedRoute = ({ children }) => {
   const { token, user } = useAuth();
@@ -28,7 +29,8 @@ function App() {
     <LanguageProvider>
       <AuthProvider>
         <SocketProvider>
-          <Router>
+          <BasketProvider>
+            <Router>
             <Routes>
               {}
               <Route path="/" element={<Home />} />
@@ -71,9 +73,10 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Router>
-        </SocketProvider>
-      </AuthProvider>
-    </LanguageProvider>
+        </BasketProvider>
+      </SocketProvider>
+    </AuthProvider>
+  </LanguageProvider>
   );
 }
 

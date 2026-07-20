@@ -115,7 +115,8 @@ router.post('/', authenticateJWT, requireRole(['BUYER', 'SUPER_ADMIN']), async (
         emitSocketEvent(req, `user_${product.sellerId}`, 'quote_notification', {
             type: 'NEW_QUOTE',
             quoteId: quote.id,
-            message: `${quote.buyer.name} (${quote.buyer.companyName || 'Alıcı'}) adlı firmadan '${quote.product.title}' ürünü için yeni bir teklif talebi geldi!`
+            messageKey: 'notif_new_quote',
+            messageArgs: [quote.buyer.name, quote.buyer.companyName || 'Alıcı', quote.product.title]
         });
 
         res.status(201).json({ success: true, quote });
@@ -164,7 +165,8 @@ router.post('/batch', authenticateJWT, requireRole(['BUYER', 'SUPER_ADMIN']), as
             emitSocketEvent(req, `user_${product.sellerId}`, 'quote_notification', {
                 type: 'NEW_QUOTE',
                 quoteId: quote.id,
-                message: `${quote.buyer.name} (${quote.buyer.companyName || 'Alıcı'}) adlı firmadan '${quote.product.title}' ürünü için yeni bir teklif talebi geldi!`
+                messageKey: 'notif_new_quote',
+                messageArgs: [quote.buyer.name, quote.buyer.companyName || 'Alıcı', quote.product.title]
             });
         }
 
@@ -193,8 +195,9 @@ router.post('/:id/tracking', authenticateJWT, async (req, res) => {
 
         if (!quote) return res.status(404).json({ error: 'Quote request not found' });
 
-        if (quote.sellerId !== req.user.id && req.user.role !== 'SUPER_ADMIN') {
-            return res.status(403).json({ error: 'Forbidden: Only the seller can update order tracking stage' });
+        const isBuyerDelivering = req.user.id === quote.buyerId && trackingStage === 'DELIVERED';
+        if (quote.sellerId !== req.user.id && req.user.role !== 'SUPER_ADMIN' && !isBuyerDelivering) {
+            return res.status(403).json({ error: 'Forbidden: Only the seller or authorized buyer can update order tracking stage' });
         }
 
         const updated = await prisma.quoteRequest.update({
@@ -205,7 +208,8 @@ router.post('/:id/tracking', authenticateJWT, async (req, res) => {
         emitSocketEvent(req, `user_${quote.buyerId}`, 'quote_notification', {
             type: 'TRACKING_UPDATED',
             quoteId: quote.id,
-            message: `'${quote.product.title}' siparişinizin durum güncellendi: ${trackingStage}`
+            messageKey: 'notif_tracking_updated',
+            messageArgs: [quote.product.title, trackingStage]
         });
 
         emitSocketEvent(req, `quote_${quote.id}`, 'quote_update', updated);
@@ -251,7 +255,8 @@ router.post('/:id/offer', authenticateJWT, requireRole(['SELLER', 'BUYER', 'SUPE
         emitSocketEvent(req, `user_${notifyUserId}`, 'quote_notification', {
             type: 'OFFER_MADE',
             quoteId: quote.id,
-            message: `${quote.seller.name} firması '${quote.product.title}' ürünü için fiyat teklifi verdi: ${Number(proposedPrice).toLocaleString()} TRY`
+            messageKey: 'notif_offer_made',
+            messageArgs: [req.user.name, quote.product.title, Number(proposedPrice).toLocaleString(), quote.currency || 'TRY']
         });
 
         emitSocketEvent(req, `quote_${quote.id}`, 'quote_update', updated);
@@ -294,7 +299,8 @@ router.post('/:id/status', authenticateJWT, async (req, res) => {
         emitSocketEvent(req, `user_${quote.lastProposerId}`, 'quote_notification', {
             type: 'STATUS_CHANGED',
             quoteId: quote.id,
-            message: `${quote.buyer.name} firması '${quote.product.title}' ürünü için verdiğiniz fiyat teklifini ${statusLabel}!`
+            messageKey: 'notif_status_changed',
+            messageArgs: [req.user.name, quote.product.title, status]
         });
 
         emitSocketEvent(req, `quote_${quote.id}`, 'quote_update', updated);
@@ -340,7 +346,8 @@ router.post('/:id/messages', authenticateJWT, async (req, res) => {
         emitSocketEvent(req, `user_${recipientId}`, 'quote_notification', {
             type: 'NEW_CHAT_MESSAGE',
             quoteId: id,
-            message: `${req.user.name}: ${text.length > 30 ? text.substring(0, 30) + '...' : text}`
+            messageKey: 'notif_new_chat_message',
+            messageArgs: [req.user.name, text.length > 30 ? text.substring(0, 30) + '...' : text]
         });
 
         res.status(201).json({ success: true, message });
