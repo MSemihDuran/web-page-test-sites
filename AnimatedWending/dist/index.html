@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İzel & Mert - Düğün Davetiyesi</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script type="module" crossorigin src="/assets/index-CVINhM41.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CFgZXIFp.css">
+</head>
+<body>
+
+    <!-- Background Music Toggle -->
+    <button id="music-toggle" class="music-btn" aria-label="Müzik Çal/Durdur">
+        <i class="fas fa-volume-mute" id="music-icon"></i>
+        <!-- Soft, emotional wedding piano track -->
+        <audio id="bg-music" loop src="https://assets.mixkit.co/music/preview/mixkit-beautiful-dream-2384.mp3"></audio>
+    </button>
+
+    <!-- 1. ENVELOPE SCREEN (Intro Screen) -->
+    <div id="envelope-screen" class="envelope-screen">
+        <div class="envelope-wrapper">
+            <div class="envelope" id="wedding-envelope">
+                
+                <!-- Back plate of envelope -->
+                <div class="envelope-back">
+                    <svg width="100%" height="100%" preserveAspectRatio="none">
+                        <rect id="backplate-rect" fill="#2d050a" />
+                    </svg>
+                </div>
+                
+                <!-- The Invitation Card inside the envelope -->
+                <div class="envelope-card" id="envelope-card">
+                    <div class="card-inner">
+                        <div class="card-palace-bg" style="background-image: url('/assets/palace_watercolor-DXNMMcge.png');"></div>
+                        <div class="card-overlay">
+                            <div class="card-frame-box">
+                                <div class="palace-icon-wrapper">
+                                    <!-- Elegant palace ornament -->
+                                    <svg viewBox="0 0 100 60" class="palace-svg">
+                                        <path d="M10,50 L90,50 M20,50 L20,30 L30,20 L40,30 L40,50 M40,50 L40,25 L50,15 L60,25 L60,50 M60,50 L60,30 L70,20 L80,30 L80,50" stroke="#d4af37" stroke-width="1.5" fill="none"/>
+                                        <path d="M15,50 L85,50 M25,30 L25,45 M35,30 L35,45 M45,25 L45,45 M55,25 L55,45 M65,30 L65,45 M75,30 L75,45" stroke="#d4af37" stroke-width="1" fill="none"/>
+                                    </svg>
+                                </div>
+                                <h1 class="names-script">İzel & Mert</h1>
+                                <div class="arrow-container">
+                                    <i class="fas fa-chevron-down arrow-down"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Left, Right, Bottom flaps of the envelope -->
+                <div class="envelope-front">
+                    <svg width="100%" height="100%" preserveAspectRatio="none">
+                        <path id="left-flap" fill="#35060b" />
+                        <path id="right-flap" fill="#35060b" />
+                        <path id="bottom-flap" fill="#3a080d" />
+                        <path id="bottom-gold-left" fill="none" stroke="#a3824f" stroke-width="1.5" />
+                        <path id="bottom-gold-right" fill="none" stroke="#a3824f" stroke-width="1.5" />
+                    </svg>
+                </div>
+                
+                <!-- Top Flap (folds down) -->
+                <div class="envelope-top" id="envelope-top">
+                    <svg width="100%" height="100%" preserveAspectRatio="none">
+                        <path id="top-flap-bg" fill="#440c13" filter="drop-shadow(0px 4px 6px rgba(0,0,0,0.4))" />
+                        <path id="top-flap-border" fill="none" stroke="#c5a880" stroke-width="2.5" />
+                    </svg>
+                </div>
+                
+                <!-- Wax Seal Button -->
+                <button class="wax-seal" id="wax-seal-btn" aria-label="Zarfı Aç">
+                    <div class="seal-inner">
+                        <span class="monogram">İ & M</span>
+                        <span class="click-text">TIKLA</span>
+                    </div>
+                </button>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MAIN SCROLLABLE CONTENT (Hidden by default, shown after opening) -->
+    <main id="main-content" class="main-content">
+        
+        <!-- Hero Section (Expanded card background) -->
+        <section id="hero" class="hero-section">
+            <div class="hero-card">
+                <div class="hero-palace-bg" style="background-image: url('/assets/palace_watercolor-DXNMMcge.png');"></div>
+                <div class="hero-overlay">
+                    <div class="hero-content">
+                        <div class="hero-ornament">
+                            <svg viewBox="0 0 100 60" class="palace-svg-large">
+                                <path d="M10,50 L90,50 M20,50 L20,30 L30,20 L40,30 L40,50 M40,50 L40,25 L50,15 L60,25 L60,50 M60,50 L60,30 L70,20 L80,30 L80,50" stroke="#d4af37" stroke-width="1.5" fill="none"/>
+                                <path d="M15,50 L85,50 M25,30 L25,45 M35,30 L35,45 M45,25 L45,45 M55,25 L55,45 M65,30 L65,45 M75,30 L75,45" stroke="#d4af37" stroke-width="1" fill="none"/>
+                            </svg>
+                        </div>
+                        <h2 class="names-script-large">İzel & Mert</h2>
+                        <div class="hero-scroll-indicator">
+                            <span class="scroll-text">Aşağı Kaydırın</span>
+                            <i class="fas fa-angle-double-down bounce-arrow"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- General Invitation Section -->
+        <section id="details" class="details-section">
+            <div class="container text-center">
+                <p class="invite-header scroll-reveal">BU ÖZEL GÜNÜMÜZDE</p>
+                <p class="invite-header scroll-reveal">SİZLERİ DE ARAMIZDA GÖRMEKTEN MUTLULUK DUYARIZ.</p>
+                
+                <div class="names-divider scroll-reveal">
+                    <span class="ornament-line"></span>
+                    <i class="fas fa-heart heart-icon"></i>
+                    <span class="ornament-line"></span>
+                </div>
+                
+                <h3 class="names-display scroll-reveal">İzel & Mert</h3>
+                
+                <div class="gold-divider scroll-reveal"></div>
+                
+                <div class="wedding-date-box scroll-reveal">
+                    <p class="wedding-day">4 Temmuz 2026</p>
+                    <p class="wedding-weekday">Cumartesi</p>
+                </div>
+                
+                <p class="wedding-venue scroll-reveal">Esma Sultan Yalısı</p>
+                <p class="wedding-address scroll-reveal">Ortaköy, Muallim Naci Cd. No:6, Beşiktaş / İstanbul</p>
+            </div>
+        </section>
+
+        <!-- Countdown Section -->
+        <section id="countdown-section" class="countdown-section">
+            <div class="container text-center">
+                <h4 class="section-title gold-text scroll-reveal">GERİ SAYIM</h4>
+                <div class="countdown-divider scroll-reveal"></div>
+                
+                <div class="countdown-container scroll-reveal" id="countdown-timer">
+                    <div class="countdown-item">
+                        <span class="time-num" id="days">00</span>
+                        <span class="time-label">GÜN</span>
+                    </div>
+                    <div class="countdown-item">
+                        <span class="time-num" id="hours">00</span>
+                        <span class="time-label">SAAT</span>
+                    </div>
+                    <div class="countdown-item">
+                        <span class="time-num" id="minutes">00</span>
+                        <span class="time-label">DAKİKA</span>
+                    </div>
+                    <div class="countdown-item">
+                        <span class="time-num" id="seconds">00</span>
+                        <span class="time-label">SANİYE</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Program Flow Section -->
+        <section id="program-flow" class="flow-section">
+            <div class="container">
+                <div class="flow-card scroll-reveal">
+                    <h4 class="section-title text-center">AKIŞ</h4>
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-glass-cheers"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <span class="time">19:00</span>
+                                <h5 class="event-title">KOKTEYL</h5>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-ring"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <span class="time">20:00</span>
+                                <h5 class="event-title">NİKAH</h5>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-utensils"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <span class="time">20:30</span>
+                                <h5 class="event-title">YEMEK</h5>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-icon">
+                                <i class="fas fa-music"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <span class="time">00:00</span>
+                                <h5 class="event-title">AFTER PARTY</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Location Section -->
+        <section id="location" class="location-section">
+            <div class="container text-center">
+                <h4 class="section-title scroll-reveal">KONUM</h4>
+                <div class="gold-divider scroll-reveal"></div>
+                
+                <div class="location-card scroll-reveal">
+                    <div class="map-container">
+                        <iframe 
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3008.973059178491!2d29.023838476569106!3d41.04754701725619!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1m3!1d3008.971207185011!2d29.0264133765691!3d41.04758711725359!5m2!1skey!2s" 
+                            width="100%" 
+                            height="350" 
+                            style="border:0;" 
+                            allowfullscreen="" 
+                            loading="lazy" 
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
+                    <div class="location-info">
+                        <h5>Esma Sultan Yalısı</h5>
+                        <p class="address">Ortaköy, Muallim Naci Cd. No:6, Beşiktaş / İstanbul</p>
+                        <div class="map-buttons">
+                            <a href="https://maps.google.com/?q=Esma+Sultan+Yalısı" target="_blank" class="btn btn-gold">
+                                <i class="fas fa-map-marker-alt"></i> Google Maps ile Yol Tarifi
+                            </a>
+                            <a href="http://maps.apple.com/?q=Esma+Sultan+Yalısı" target="_blank" class="btn btn-outline">
+                                <i class="fab fa-apple"></i> Apple Maps ile Yol Tarifi
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RSVP / Attendance Section -->
+        <section id="rsvp" class="rsvp-section">
+            <div class="container text-center">
+                <h4 class="section-title scroll-reveal">KATILIM</h4>
+                <div class="gold-divider scroll-reveal"></div>
+                
+                <div class="rsvp-card scroll-reveal">
+                    <p class="rsvp-deadline">Son Katılım Bildirim Tarihi: <strong>25 Ağustos 2026</strong></p>
+                    <p class="rsvp-text">Düğünümüze katılım durumunuzu aşağıdaki butonlara tıklayarak WhatsApp üzerinden bize bildirebilirsiniz.</p>
+                    
+                    <div class="rsvp-buttons">
+                        <a href="https://wa.me/905555555555?text=Merhaba,%20İzel%20ve%20Mert'in%20düğününe%20katılacağımı%20belirtmek%20isterim." target="_blank" class="btn btn-rsvp btn-yes">
+                            <i class="fab fa-whatsapp"></i> Katılacağım
+                        </a>
+                        <a href="https://wa.me/905555555555?text=Merhaba,%20İzel%20ve%20Mert'in%20düğününe%20katılamayacağımı%20belirtmek%20isterim." target="_blank" class="btn btn-rsvp btn-no">
+                            <i class="fab fa-whatsapp"></i> Katılamayacağım
+                        </a>
+                    </div>
+                    
+                    <div class="rsvp-contact">
+                        <p class="phone-label">Detaylı Bilgi ve İletişim:</p>
+                        <a href="tel:+905555555555" class="phone-number"><i class="fas fa-phone-alt"></i> +90 (555) 555 55 55</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer text-center">
+            <p class="footer-names">İzel & Mert</p>
+            <p class="footer-thankyou">Düğünümüzde görüşmek üzere!</p>
+        </footer>
+
+    </main>
+
+</body>
+</html>
