@@ -2,7 +2,10 @@
   "name": "portfolyo-apex",
   "version": "1.0.0",
   "description": "Apex Real Estate Platform Demo",
-  "main": "api.js",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
     "express": "^4.19.2"
   }

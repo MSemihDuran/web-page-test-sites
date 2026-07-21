@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apex Real Estate Platform</title>
+    <title>Apex Real Estate | Premium Living Solutions</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -12,11 +12,13 @@
                 extend: {
                     colors: {
                         brand: {
-                            bg: '#0b1329',
-                            card: '#1c2541',
-                            teal: '#48cae4',
-                            blue: '#0077b6',
-                            orange: '#f77f00'
+                            bg: '#f8fafc',      // Light background slate-50
+                            card: '#ffffff',    // White card background
+                            teal: '#0d9488',    // Emerald/Teal-600 for contrast
+                            blue: '#1d4ed8',    // Blue-700
+                            orange: '#ea580c',  // Orange-600
+                            gold: '#b45309',    // Amber-700
+                            lightGray: '#f1f5f9'
                         }
                     }
                 }
@@ -27,183 +29,346 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <!-- Google Fonts: Outfit -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Outfit', sans-serif;
-            background-color: #0b1329;
+            background-color: #f8fafc;
         }
         /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #0b1329;
+            background: #f8fafc;
         }
         ::-webkit-scrollbar-thumb {
-            background: #1c2541;
+            background: #cbd5e1;
             border-radius: 3px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #48cae4;
+            background: #0d9488;
         }
         .glass-panel {
-            background: rgba(28, 37, 65, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(72, 202, 228, 0.15);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(13, 148, 136, 0.15);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+        }
+        .hero-bg {
+            background-image: linear-gradient(180deg, rgba(248, 250, 252, 0.75) 0%, rgba(248, 250, 252, 0.98) 100%), 
+                              url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1600');
+            background-size: cover;
+            background-position: center;
+        }
+        .transition-view {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
     </style>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden">
+<body class="text-slate-800 min-h-screen flex flex-col justify-between overflow-x-hidden">
 
     <!-- Top Navbar -->
     <header class="glass-panel sticky top-0 z-40 py-4 px-6 border-b border-brand-teal/10">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-3">
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('home')">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-r from-brand-teal to-brand-blue flex items-center justify-center text-white font-black text-xl shadow-lg shadow-brand-teal/20">
                     A
                 </div>
                 <div>
-                    <h1 class="text-lg font-black tracking-wider text-white">APEX REAL ESTATE</h1>
-                    <span class="text-[9px] uppercase font-bold tracking-widest text-brand-teal">Premium Living Solutions</span>
+                    <h1 class="text-lg font-black tracking-wider text-slate-900">APEX REAL ESTATE</h1>
+                    <span class="text-[9px] uppercase font-bold tracking-widest text-brand-teal block -mt-1">Premium Living Solutions</span>
                 </div>
             </div>
 
+            <!-- Main Menu Links -->
+            <nav class="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-wider text-slate-600">
+                <button onclick="switchView('home')" id="nav-home" class="hover:text-brand-teal transition-colors text-brand-teal border-b-2 border-brand-teal pb-1">Anasayfa</button>
+                <button onclick="switchView('explore')" id="nav-explore" class="hover:text-brand-teal transition-colors pb-1 border-b-2 border-transparent">Evleri Keşfet</button>
+                <button onclick="alert('Apex Real Estate, 2012 yılından beri premium segmentte gayrimenkul danışmanlığı sunmaktadır.')" class="hover:text-brand-teal transition-colors pb-1 border-b-2 border-transparent">Hakkımızda</button>
+                <button onclick="alert('Bize info@apexrealestate.com veya +90 (212) 555 0199 numaralı telefondan ulaşabilirsiniz.')" class="hover:text-brand-teal transition-colors pb-1 border-b-2 border-transparent">İletişim</button>
+            </nav>
+
+            <!-- Auth and Admin Action buttons -->
             <div class="flex items-center gap-4">
+                <!-- Appointment Requests Manager Button (Admin Only) -->
                 <button 
+                    id="adminAppointmentsBtn"
+                    onclick="openAppointmentsModal()" 
+                    class="hidden px-4 py-2.5 rounded-xl border border-brand-orange/30 hover:border-brand-orange hover:bg-brand-orange/10 text-brand-orange transition-all text-xs font-black uppercase tracking-wider cursor-pointer"
+                >
+                    📥 Randevu Talepleri
+                </button>
+
+                <!-- Add Listing (Admin Only) -->
+                <button 
+                    id="adminAddListingBtn"
                     onclick="openAddModal()" 
-                    class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-teal to-brand-blue hover:opacity-95 transition-all text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-brand-teal/10 active:scale-95 cursor-pointer"
+                    class="hidden px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-teal to-brand-blue hover:opacity-95 transition-all text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-brand-teal/10 active:scale-95 cursor-pointer"
                 >
                     + Yeni İlan Ekle
                 </button>
+
+                <!-- Auth State Button Container -->
+                <div id="authStateContainer">
+                    <button 
+                        onclick="openAuthModal()" 
+                        class="px-4 py-2.5 rounded-xl border border-brand-teal/30 hover:border-brand-teal hover:bg-brand-teal/10 transition-all text-xs font-bold uppercase tracking-wider text-brand-teal cursor-pointer"
+                    >
+                        Giriş Yap / Üye Ol
+                    </button>
+                </div>
             </div>
         </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="flex-grow max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
-        
-        <!-- Live Stats Dashboard -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="glass-panel rounded-2xl p-4 flex justify-between items-center border border-brand-teal/10">
-                <div>
-                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">TOPLAM İLAN</span>
-                    <span class="text-2xl font-extrabold text-white mt-1 block" id="statTotalListings">0</span>
-                </div>
-                <div class="text-2xl opacity-30">🏠</div>
-            </div>
-            <div class="glass-panel rounded-2xl p-4 flex justify-between items-center border border-brand-teal/10">
-                <div>
-                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">ORTALAMA M²</span>
-                    <span class="text-2xl font-extrabold text-brand-teal mt-1 block" id="statAvgSize">0 m²</span>
-                </div>
-                <div class="text-2xl opacity-30">📐</div>
-            </div>
-            <div class="glass-panel rounded-2xl p-4 flex justify-between items-center border border-brand-teal/10">
-                <div>
-                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">ORTALAMA FİYAT</span>
-                    <span class="text-2xl font-extrabold text-brand-orange mt-1 block" id="statAvgPrice">0 TRY</span>
-                </div>
-                <div class="text-2xl opacity-30">💰</div>
-            </div>
-        </div>
+    <!-- MAIN VIEWS WRAPPER -->
+    <main class="flex-grow w-full">
 
-        <!-- Filters glass bar -->
-        <div class="glass-panel rounded-3xl p-6 flex flex-col md:flex-row gap-4 items-center justify-between shadow-2xl">
-            <div class="flex flex-wrap gap-4 w-full md:w-auto items-center">
-                <!-- Search -->
-                <div class="relative w-full sm:w-64">
-                    <input 
-                        type="text" 
-                        id="searchQuery" 
-                        oninput="applyFilters()"
-                        placeholder="Şehir veya konum ara..." 
-                        class="w-full py-3 px-4 rounded-2xl bg-brand-bg/50 border border-brand-teal/10 text-xs font-semibold text-white focus:outline-none focus:border-brand-teal transition-colors"
-                    />
+        <!-- ================= HOME VIEW ================= -->
+        <section id="view-home" class="transition-view flex flex-col">
+            <!-- Hero / Showcase Area -->
+            <div class="hero-bg min-h-[70vh] flex flex-col justify-center items-center px-6 py-12 text-center">
+                <div class="max-w-4xl flex flex-col items-center">
+                    <span class="px-4 py-1.5 rounded-full bg-brand-teal/10 border border-brand-teal/20 text-[10px] sm:text-xs font-black uppercase tracking-widest text-brand-teal mb-6 animate-pulse">
+                        ⭐ Lüks Gayrimenkul Yatırım Ortaklığı
+                    </span>
+                    <h2 class="text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 leading-tight uppercase tracking-tight">
+                        Sıra Dışı Yaşamlar İçin <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-teal via-brand-teal to-brand-gold">Seçkin Konutlar</span>
+                    </h2>
+                    <p class="text-sm sm:text-base md:text-lg text-slate-600 font-semibold max-w-2xl mt-6 leading-relaxed">
+                        Apex Real Estate, hayalinizdeki eve veya kiralık lüks yaşam alanınıza bir adım daha yaklaşmanız için satılık ve kiralık en seçkin gayrimenkul çözümlerini sunar.
+                    </p>
+                    
+                    <div class="flex flex-wrap justify-center gap-4 mt-10">
+                        <button 
+                            onclick="switchView('explore')" 
+                            class="px-8 py-4 rounded-2xl bg-gradient-to-r from-brand-teal to-brand-blue hover:opacity-95 text-white text-sm font-black uppercase tracking-widest transition-all shadow-xl shadow-brand-teal/20 hover:scale-105 active:scale-95 cursor-pointer"
+                        >
+                            Hayalinizdeki Evi Keşfedin ➔
+                        </button>
+                        <button 
+                            onclick="openAuthModal()" 
+                            class="px-8 py-4 rounded-2xl glass-panel hover:bg-white text-slate-800 text-sm font-black uppercase tracking-widest transition-all border border-brand-teal/20 cursor-pointer"
+                        >
+                            Hemen Üye Ol
+                        </button>
+                    </div>
                 </div>
-                <!-- Property Type -->
-                <select 
-                    id="filterType" 
-                    onchange="applyFilters()"
-                    class="py-3 px-4 rounded-2xl bg-brand-bg/80 border border-brand-teal/10 text-xs font-bold text-brand-teal focus:outline-none focus:border-brand-teal transition-colors cursor-pointer"
-                >
-                    <option value="All">Tüm Emlak Tipleri</option>
-                    <option value="Villa">Villa</option>
-                    <option value="Apartment">Daire (Apartment)</option>
-                    <option value="Office">Ofis (Office)</option>
-                </select>
-                <!-- Price Filter -->
-                <select 
-                    id="filterPrice" 
-                    onchange="applyFilters()"
-                    class="py-3 px-4 rounded-2xl bg-brand-bg/80 border border-brand-teal/10 text-xs font-bold text-brand-teal focus:outline-none focus:border-brand-teal transition-colors cursor-pointer"
-                >
-                    <option value="All">Tüm Fiyatlar</option>
-                    <option value="0-15">15M TRY Altı</option>
-                    <option value="15-30">15M - 30M TRY</option>
-                    <option value="30+">30M TRY Üstü</option>
-                </select>
-                <!-- Favorites Only Toggle -->
-                <button 
-                    onclick="toggleFavFilter()" 
-                    id="favFilterBtn"
-                    class="py-3 px-4 rounded-2xl border border-brand-teal/20 text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 bg-brand-bg/40 text-brand-teal hover:border-brand-teal/40 cursor-pointer"
-                >
-                    <span>❤️</span> Sadece Favoriler (<span id="favFilterCount">0</span>)
-                </button>
-            </div>
-            
-            <div class="text-xs text-brand-teal font-black uppercase tracking-widest bg-brand-teal/10 px-4 py-2.5 rounded-2xl border border-brand-teal/20" id="resultsCount">
-                Yükleniyor...
-            </div>
-        </div>
-
-        <!-- Split Grid layout: Map & Listings -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px] flex-grow">
-            
-            <!-- Left: Property Listings Grid (lg:col-span-7) -->
-            <div class="lg:col-span-7 flex flex-col gap-6 max-h-[800px] overflow-y-auto pr-2" id="listingsContainer">
-                <!-- Listings populated dynamically -->
             </div>
 
-            <!-- Right: Interactive Leaflet Map (lg:col-span-5) -->
-            <div class="lg:col-span-5 glass-panel rounded-3xl overflow-hidden relative shadow-2xl min-h-[400px] border border-brand-teal/10">
-                <div id="map" class="w-full h-full min-h-[400px] z-10 bg-brand-bg"></div>
+            <!-- Brand Values / About Us Cards -->
+            <div class="max-w-7xl mx-auto w-full px-6 py-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="glass-panel p-8 rounded-3xl border border-brand-teal/10 hover:border-brand-teal/30 hover:shadow-md transition-all group">
+                    <div class="text-4xl mb-4 group-hover:scale-110 transition-transform w-fit">🏆</div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2 uppercase tracking-wide">Geniş Portföy</h3>
+                    <p class="text-xs text-slate-500 font-semibold leading-relaxed">
+                        Prestijli lokasyonlarda yer alan satılık lüks villaların yanı sıra, hemen taşınmaya hazır premium kiralık daire ve A+ ofis alternatifleri sunuyoruz.
+                    </p>
+                </div>
+                <div class="glass-panel p-8 rounded-3xl border border-brand-teal/10 hover:border-brand-teal/30 hover:shadow-md transition-all group">
+                    <div class="text-4xl mb-4 group-hover:scale-110 transition-transform w-fit">🔑</div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2 uppercase tracking-wide">Kiralama & Satış Çözümleri</h3>
+                    <p class="text-xs text-slate-500 font-semibold leading-relaxed">
+                        Yatırımlık mülk edinme hedeflerinizden, geçici veya operasyonel kiralama ihtiyaçlarınıza kadar tüm süreçlerde yanınızdayız.
+                    </p>
+                </div>
+                <div class="glass-panel p-8 rounded-3xl border border-brand-teal/10 hover:border-brand-teal/30 hover:shadow-md transition-all group">
+                    <div class="text-4xl mb-4 group-hover:scale-110 transition-transform w-fit">🔒</div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2 uppercase tracking-wide">Güven ve Şeffaflık</h3>
+                    <p class="text-xs text-slate-500 font-semibold leading-relaxed">
+                        Kira sözleşmelerinden tapu devir süreçlerine kadar her aşamada şeffaf, dürüst ve yasal standartlara uygun danışmanlık sağlıyoruz.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= EXPLORE VIEW ================= -->
+        <section id="view-explore" class="transition-view hidden max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
+            <!-- Live Stats Dashboard -->
+            <div class="flex gap-4">
+                <div class="glass-panel rounded-2xl p-4 flex items-center gap-4 border border-brand-teal/10 min-w-[220px] shadow-sm">
+                    <div class="text-2xl opacity-40">🏠</div>
+                    <div>
+                        <span class="text-[9px] font-black text-slate-500 uppercase tracking-wider block">TOPLAM İLANLAR</span>
+                        <span class="text-2xl font-extrabold text-slate-900 mt-0.5 block" id="statTotalListings">0</span>
+                    </div>
+                </div>
             </div>
 
-        </div>
+            <!-- Filters glass bar -->
+            <div class="glass-panel rounded-3xl p-6 flex flex-col gap-4 shadow-lg">
+                <!-- Search bar & Main selects -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+                    <!-- Search -->
+                    <div class="relative w-full">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Konum Arama</label>
+                        <input 
+                            type="text" 
+                            id="searchQuery" 
+                            oninput="applyFilters()"
+                            placeholder="Şehir veya konum ara..." 
+                            class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-brand-teal transition-colors"
+                        />
+                    </div>
+                    <!-- Sale/Rent Filter -->
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">İlan Durumu</label>
+                        <select 
+                            id="filterStatus" 
+                            onchange="applyFilters()"
+                            class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-xs font-bold text-brand-teal focus:outline-none focus:border-brand-teal transition-colors cursor-pointer"
+                        >
+                            <option value="All">Tüm İlan Durumları</option>
+                            <option value="Sale">Satılık</option>
+                            <option value="Rent">Kiralık</option>
+                        </select>
+                    </div>
+                    <!-- Property Type -->
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Emlak Tipi</label>
+                        <select 
+                            id="filterType" 
+                            onchange="applyFilters()"
+                            class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-xs font-bold text-brand-teal focus:outline-none focus:border-brand-teal transition-colors cursor-pointer"
+                        >
+                            <option value="All">Tüm Emlak Tipleri</option>
+                            <option value="Villa">Villa</option>
+                            <option value="Apartment">Daire (Apartment)</option>
+                            <option value="Office">Ofis (Office)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Custom inputs: Price, Bedrooms, Size -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full pt-2 border-t border-slate-100">
+                    <!-- Min Price -->
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Min Fiyat (TRY)</label>
+                        <input 
+                            type="number" 
+                            id="filterMinPrice" 
+                            oninput="applyFilters()"
+                            placeholder="Örn: 50000" 
+                            class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-brand-teal transition-colors"
+                        />
+                    </div>
+                    <!-- Max Price -->
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Max Fiyat (TRY)</label>
+                        <input 
+                            type="number" 
+                            id="filterMaxPrice" 
+                            oninput="applyFilters()"
+                            placeholder="Örn: 20000000" 
+                            class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-brand-teal transition-colors"
+                        />
+                    </div>
+                    <!-- Oda Sayısı -->
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Min Oda Sayısı</label>
+                        <select 
+                            id="filterBedrooms" 
+                            onchange="applyFilters()"
+                            class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-xs font-bold text-brand-teal focus:outline-none focus:border-brand-teal transition-colors cursor-pointer"
+                        >
+                            <option value="All">Tüm Oda Sayıları</option>
+                            <option value="1">1+ Oda</option>
+                            <option value="2">2+ Oda</option>
+                            <option value="3">3+ Oda</option>
+                            <option value="4">4+ Oda</option>
+                            <option value="5">5+ Oda</option>
+                            <option value="6">6+ Oda</option>
+                        </select>
+                    </div>
+                    <!-- Min Size -->
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Min Büyüklük (m²)</label>
+                        <input 
+                            type="number" 
+                            id="filterMinSize" 
+                            oninput="applyFilters()"
+                            placeholder="Örn: 100" 
+                            class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-brand-teal transition-colors"
+                        />
+                    </div>
+                </div>
+
+                <!-- Footer row: Favorites & Results Count -->
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-2 border-t border-slate-100">
+                    <button 
+                        onclick="toggleFavFilter()" 
+                        id="favFilterBtn"
+                        class="py-2.5 px-4 rounded-xl border border-brand-teal/20 text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 bg-white text-brand-teal hover:border-brand-teal/40 cursor-pointer w-full sm:w-auto justify-center"
+                    >
+                        <span>❤️</span> Sadece Favoriler (<span id="favFilterCount">0</span>)
+                    </button>
+                    
+                    <div class="text-xs text-brand-teal font-black uppercase tracking-widest bg-brand-teal/10 px-4 py-2.5 rounded-xl border border-brand-teal/20 w-full sm:w-auto text-center" id="resultsCount">
+                        Yükleniyor...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Split Grid layout: Map & Listings -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px] flex-grow">
+                <!-- Left: Property Listings Grid (lg:col-span-7) -->
+                <div class="lg:col-span-7 flex flex-col gap-6 max-h-[800px] overflow-y-auto pr-2" id="listingsContainer">
+                    <!-- Listings populated dynamically -->
+                </div>
+
+                <!-- Right: Interactive Leaflet Map (lg:col-span-5) -->
+                <div class="lg:col-span-5 glass-panel rounded-3xl overflow-hidden relative shadow-lg min-h-[400px] border border-brand-teal/10">
+                    <div id="map" class="w-full h-full min-h-[400px] z-10 bg-slate-100"></div>
+                </div>
+            </div>
+        </section>
 
     </main>
 
-    <!-- Chat messenger floating panel -->
+    <!-- Footer -->
+    <footer class="border-t border-slate-200 py-8 px-6 text-center text-xs text-slate-500 font-bold bg-white">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p>&copy; 2026 Apex Real Estate. Tüm hakları saklıdır.</p>
+            <div class="flex gap-4">
+                <span class="text-slate-400">Gizlilik Politikası</span>
+                <span class="text-slate-300">|</span>
+                <span class="text-slate-400">Kullanım Şartları</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ================= FLOATING CHAT MESSENGER ================= -->
     <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end">
         <!-- Messenger Window -->
         <div id="chatWindow" class="hidden w-80 h-96 glass-panel rounded-3xl overflow-hidden shadow-2xl flex flex-col border border-brand-teal/20 mb-4 transition-all duration-300">
             <!-- Header -->
-            <div class="bg-brand-card/90 border-b border-brand-teal/15 p-4 flex justify-between items-center">
+            <div class="bg-white border-b border-brand-teal/15 p-4 flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></div>
-                    <span class="text-xs font-black text-white uppercase tracking-wider">Danışman Messenger</span>
+                    <span class="text-xs font-black text-slate-900 uppercase tracking-wider">Danışman Messenger</span>
                 </div>
-                <button onclick="toggleChat()" class="text-slate-400 hover:text-white transition-colors text-xs font-bold">Kapat</button>
+                <button onclick="toggleChat()" class="text-slate-400 hover:text-slate-700 transition-colors text-xs font-bold">Kapat</button>
             </div>
             <!-- Messages stream -->
             <div id="chatMessages" class="flex-grow p-4 overflow-y-auto space-y-3 flex flex-col text-xs font-semibold">
                 <!-- Loaded dynamically -->
             </div>
             <!-- Input container -->
-            <form onsubmit="sendMessage(event)" class="border-t border-brand-teal/10 p-2.5 flex gap-2 bg-brand-bg/50">
+            <form onsubmit="sendMessage(event)" class="border-t border-slate-100 p-2.5 flex gap-2 bg-slate-50/50">
                 <input 
                     type="text" 
                     id="chatInput" 
                     placeholder="Mesajınızı yazın..." 
                     required 
-                    class="flex-grow py-2 px-3 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-xs text-white focus:outline-none focus:border-brand-teal transition-colors"
+                    class="flex-grow py-2 px-3 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:border-brand-teal transition-colors"
                 />
                 <button 
                     type="submit" 
-                    class="px-4 py-2 rounded-xl bg-brand-teal hover:opacity-90 transition-all text-xs font-bold text-slate-900 shadow-md cursor-pointer"
+                    class="px-4 py-2 rounded-xl bg-brand-teal hover:opacity-90 transition-all text-xs font-bold text-white shadow-md cursor-pointer"
                 >
                     Gönder
                 </button>
@@ -219,71 +384,160 @@
         </button>
     </div>
 
-    <!-- Add Listing Modal overlay -->
-    <div id="addModal" class="fixed inset-0 z-50 bg-brand-bg/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <!-- ================= AUTH MODAL (LOGIN / REGISTER) ================= -->
+    <div id="authModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl border border-brand-teal/25 relative">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition-all text-xs font-black bg-white py-1.5 px-3 rounded-xl border border-slate-200 cursor-pointer">X Kapat</button>
+            
+            <!-- Auth Tab Header -->
+            <div class="flex border-b border-slate-200 mb-6 text-xs uppercase font-black">
+                <button id="tab-login" onclick="switchAuthTab('login')" class="flex-grow pb-3 border-b-2 border-brand-teal text-brand-teal">Giriş Yap</button>
+                <button id="tab-register" onclick="switchAuthTab('register')" class="flex-grow pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-850">Kayıt Ol</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4 text-xs font-semibold text-slate-700">
+                <div>
+                    <label class="block text-slate-500 font-bold mb-1">Kullanıcı Adı</label>
+                    <input type="text" id="loginUsername" required class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: admin veya burak" />
+                </div>
+                <div>
+                    <label class="block text-slate-500 font-bold mb-1">Şifre</label>
+                    <input type="password" id="loginPassword" required class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-brand-teal transition-all" placeholder="Şifrenizi girin" />
+                </div>
+                <div id="loginError" class="hidden text-red-600 font-bold text-xs bg-red-500/10 p-3 rounded-xl border border-red-500/20"></div>
+                <button 
+                    type="submit" 
+                    class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-teal to-brand-blue text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-brand-teal/20 transition-all hover:opacity-95 cursor-pointer"
+                >
+                    Giriş Yap
+                </button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="form-register" onsubmit="handleRegister(event)" class="hidden space-y-4 text-xs font-semibold text-slate-700">
+                <div>
+                    <label class="block text-slate-500 font-bold mb-1">Ad Soyad</label>
+                    <input type="text" id="registerName" required class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: Burak Emlakçı" />
+                </div>
+                <div>
+                    <label class="block text-slate-500 font-bold mb-1">Kullanıcı Adı</label>
+                    <input type="text" id="registerUsername" required class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: burak12" />
+                </div>
+                <div>
+                    <label class="block text-slate-500 font-bold mb-1">E-Posta Adresi</label>
+                    <input type="email" id="registerEmail" required class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: burak@example.com" />
+                </div>
+                <div>
+                    <label class="block text-slate-500 font-bold mb-1">Şifre</label>
+                    <input type="password" id="registerPassword" required class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-brand-teal transition-all" placeholder="Şifre oluşturun" />
+                </div>
+                <div id="registerError" class="hidden text-red-600 font-bold text-xs bg-red-500/10 p-3 rounded-xl border border-red-500/20"></div>
+                <button 
+                    type="submit" 
+                    class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-teal to-brand-blue text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-brand-teal/20 transition-all hover:opacity-95 cursor-pointer"
+                >
+                    Kayıt Ol ve Profil Oluştur
+                </button>
+            </form>
+
+            <!-- Demo Quick Login Buttons -->
+            <div class="mt-6 border-t border-slate-100 pt-4 text-center">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Kolay Test Girişleri (Demo)</span>
+                <div class="flex gap-2">
+                    <button 
+                        onclick="fillDemoLogin('admin', 'admin123')"
+                        class="flex-grow py-2 rounded-xl bg-brand-orange/10 hover:bg-brand-orange/20 border border-brand-orange/20 text-brand-orange text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer"
+                    >
+                        🔑 Admin Girişi
+                    </button>
+                    <button 
+                        onclick="fillDemoLogin('burak', 'user123')"
+                        class="flex-grow py-2 rounded-xl bg-brand-teal/10 hover:bg-brand-teal/20 border border-brand-teal/20 text-brand-teal text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer"
+                    >
+                        👤 Müşteri Girişi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= ADD LISTING MODAL ================= -->
+    <div id="addModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="glass-panel w-full max-w-xl rounded-3xl p-6 sm:p-8 shadow-2xl border border-brand-teal/25 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-start mb-6">
                 <div>
-                    <h2 class="text-xl font-black text-white">Yeni Emlak İlanı Kaydı</h2>
-                    <span class="text-[10px] uppercase font-bold text-brand-teal">Bilgiler .dat dosyasına kaydedilir</span>
+                    <h2 class="text-xl font-black text-slate-900">Yeni Emlak İlanı Ekle</h2>
+                    <span class="text-[10px] uppercase font-bold text-brand-teal">İlan doğrudan veritabanına kaydedilir</span>
                 </div>
-                <button onclick="closeAddModal()" class="text-slate-400 hover:text-white transition-colors font-bold text-sm cursor-pointer">X Kapat</button>
+                <button onclick="closeAddModal()" class="text-slate-400 hover:text-slate-800 transition-colors font-bold text-sm cursor-pointer">X Kapat</button>
             </div>
 
-            <form onsubmit="submitListing(event)" class="space-y-4 text-xs font-semibold">
+            <form onsubmit="submitListing(event)" class="space-y-4 text-xs font-semibold text-slate-700">
                 <div>
-                    <label class="block text-brand-text-secondary font-bold mb-1">İlan Başlığı</label>
-                    <input type="text" id="addTitle" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: Boğaz Manzaralı Lüks Yalı" />
+                    <label class="block text-slate-500 font-bold mb-1">İlan Başlığı</label>
+                    <input type="text" id="addTitle" required class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: Boğaz Manzaralı Lüks Yalı" />
                 </div>
                 <div>
-                    <label class="block text-brand-text-secondary font-bold mb-1">Açıklama</label>
-                    <textarea id="addDescription" required rows="3" class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-all" placeholder="İlan detayları..."></textarea>
+                    <label class="block text-slate-500 font-bold mb-1">Açıklama</label>
+                    <textarea id="addDescription" required rows="3" class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-brand-teal transition-all" placeholder="İlan detayları..."></textarea>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-brand-text-secondary font-bold mb-1">Fiyat (TRY)</label>
-                        <input type="number" id="addPrice" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: 25000000" />
+                        <label class="block text-slate-500 font-bold mb-1">Fiyat (TRY)</label>
+                        <input type="number" id="addPrice" required class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: 25000000 veya 45000" />
                     </div>
                     <div>
-                        <label class="block text-brand-text-secondary font-bold mb-1">Emlak Tipi</label>
-                        <select id="addType" class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-brand-teal focus:outline-none focus:border-brand-teal transition-all cursor-pointer">
+                        <label class="block text-slate-500 font-bold mb-1">Emlak Tipi</label>
+                        <select id="addType" class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-brand-teal focus:outline-none focus:border-brand-teal transition-all cursor-pointer">
                             <option value="Villa">Villa</option>
                             <option value="Apartment">Daire (Apartment)</option>
                             <option value="Office">Ofis (Office)</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-slate-500 font-bold mb-1">İlan Durumu</label>
+                        <select id="addStatus" class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-brand-teal focus:outline-none focus:border-brand-teal transition-all cursor-pointer">
+                            <option value="Sale">Satılık</option>
+                            <option value="Rent">Kiralık</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="grid grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-brand-text-secondary font-bold mb-1">Oda Sayısı</label>
-                        <input type="number" id="addBedrooms" class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-all" placeholder="Oda" />
+                        <label class="block text-slate-500 font-bold mb-1">Oda Sayısı</label>
+                        <input type="number" id="addBedrooms" class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-brand-teal transition-all" placeholder="Oda" />
                     </div>
                     <div>
-                        <label class="block text-brand-text-secondary font-bold mb-1">Büyüklük (m²)</label>
-                        <input type="number" id="addSize" class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-all" placeholder="m²" />
+                        <label class="block text-slate-500 font-bold mb-1">Büyüklük (m²)</label>
+                        <input type="number" id="addSize" class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-brand-teal transition-all" placeholder="m²" />
                     </div>
                     <div>
-                        <label class="block text-brand-text-secondary font-bold mb-1">Lokasyon</label>
-                        <input type="text" id="addLocation" required class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: Bebek, İstanbul" />
+                        <label class="block text-slate-500 font-bold mb-1">Lokasyon</label>
+                        <input type="text" id="addLocation" required class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: Bebek, İstanbul" />
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-brand-text-secondary font-bold mb-1">Enlem (Lat)</label>
-                        <input type="text" id="addLat" class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: 41.0772" />
+                        <label class="block text-slate-500 font-bold mb-1">Enlem (Lat)</label>
+                        <input type="text" id="addLat" class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: 41.0772" />
                     </div>
                     <div>
-                        <label class="block text-brand-text-secondary font-bold mb-1">Boylam (Lng)</label>
-                        <input type="text" id="addLng" class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: 29.0435" />
+                        <label class="block text-slate-500 font-bold mb-1">Boylam (Lng)</label>
+                        <input type="text" id="addLng" class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: 29.0435" />
                     </div>
                 </div>
                 <div>
-                    <label class="block text-brand-text-secondary font-bold mb-1">Görsel Bağlantısı (URL)</label>
-                    <input type="url" id="addImageUrl" class="w-full py-2.5 px-4 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-white focus:outline-none focus:border-brand-teal transition-all" placeholder="Resim URL (Boş bırakılırsa varsayılan atanır)" />
+                    <label class="block text-slate-500 font-bold mb-1">3D Sanal Tur URL (Matterport embed, YouTube 360 linki, vb.) [Opsiyonel]</label>
+                    <input type="url" id="addVirtualTourUrl" class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-brand-teal transition-all" placeholder="Örn: https://my.matterport.com/show/?m=JGPnGqyB6q9" />
+                </div>
+                <div>
+                    <label class="block text-slate-500 font-bold mb-1">Oda Görselleri (Her satıra bir adet URL girin, en az 1 görsel gereklidir)</label>
+                    <textarea id="addImagesUrls" rows="4" class="w-full py-2.5 px-4 rounded-xl bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-brand-teal transition-all font-mono text-[10px]" placeholder="https://resim1.com/salon.jpg&#10;https://resim2.com/yatakodasi.jpg&#10;https://resim3.com/mutfak.jpg"></textarea>
                 </div>
                 <button 
                     type="submit" 
-                    class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-teal to-brand-blue text-slate-900 text-xs font-black uppercase tracking-wider shadow-lg shadow-brand-teal/20 transition-all hover:opacity-95 cursor-pointer"
+                    class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-teal to-brand-blue text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-brand-teal/20 transition-all hover:opacity-95 cursor-pointer"
                 >
                     İlanı Veritabanına Ekle
                 </button>
@@ -291,40 +545,52 @@
         </div>
     </div>
 
-    <!-- Advanced Detail Modal overlay -->
-    <div id="detailModal" class="fixed inset-0 z-50 bg-brand-bg/80 backdrop-blur-sm hidden items-center justify-center p-4">
-        <div class="glass-panel w-full max-w-2xl rounded-3xl p-6 sm:p-8 shadow-2xl border border-brand-teal/25 max-h-[90vh] overflow-y-auto flex flex-col lg:flex-row gap-6 relative">
+    <!-- ================= ADVANCED DETAIL MODAL ================= -->
+    <div id="detailModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-2xl rounded-3xl p-6 sm:p-8 shadow-2xl border border-brand-teal/25 max-h-[90vh] overflow-y-auto flex flex-col gap-6 relative">
             
             <!-- Close btn -->
-            <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-all text-xs font-black bg-brand-card/80 py-1.5 px-3 rounded-xl border border-brand-teal/15 cursor-pointer z-50">Kapat X</button>
+            <button onclick="closeDetailModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition-all text-xs font-black bg-white py-1.5 px-3 rounded-xl border border-slate-200 cursor-pointer z-50">Kapat X</button>
 
             <!-- Main details display -->
             <div class="w-full flex flex-col gap-5">
-                <div class="h-56 rounded-2xl overflow-hidden relative">
-                    <img id="detailImg" src="" class="w-full h-full object-cover" />
-                    <span id="detailBadge" class="absolute top-3 left-3 px-3 py-1 rounded-xl bg-slate-900/90 text-brand-teal text-[10px] font-black uppercase tracking-wider border border-brand-teal/25"></span>
+                <!-- Image Slider / Gallery View -->
+                <div class="flex flex-col gap-3">
+                    <div class="h-64 sm:h-80 rounded-2xl overflow-hidden relative">
+                        <img id="detailImg" src="" class="w-full h-full object-cover transition-all duration-300" />
+                        <span id="detailBadge" class="absolute top-3 left-3 px-3 py-1 rounded-xl bg-slate-900/90 text-brand-teal text-[10px] font-black uppercase tracking-wider border border-brand-teal/25"></span>
+                        <span id="detailStatusBadge" class="absolute top-3 right-3 px-3 py-1 rounded-xl text-white text-[10px] font-black uppercase tracking-wider"></span>
+                    </div>
+                    
+                    <!-- Thumbnails Container -->
+                    <div>
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">ODA ODA FOTOĞRAFLAR (Tıklayarak gezin)</span>
+                        <div id="detailThumbsContainer" class="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+                            <!-- Thumbnails injected dynamically -->
+                        </div>
+                    </div>
                 </div>
                 
                 <div>
                     <div class="flex justify-between items-start flex-wrap gap-2">
-                        <h2 id="detailTitle" class="text-xl font-black text-white"></h2>
+                        <h2 id="detailTitle" class="text-xl font-black text-slate-900"></h2>
                         <span id="detailPrice" class="text-brand-orange font-black text-xl"></span>
                     </div>
-                    <span id="detailLocation" class="text-slate-400 font-bold block mt-1 text-xs"></span>
+                    <span id="detailLocation" class="text-slate-500 font-bold block mt-1 text-xs"></span>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 border-t border-b border-brand-teal/5 py-4 text-xs font-semibold">
+                <div class="grid grid-cols-2 gap-4 border-t border-b border-slate-100 py-4 text-xs font-semibold text-slate-600">
                     <div class="flex justify-between">
                         <span class="text-slate-400">Oda Sayısı:</span>
-                        <span id="detailBedrooms" class="text-white font-bold"></span>
+                        <span id="detailBedrooms" class="text-slate-800 font-bold"></span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-slate-400">Büyüklük (m²):</span>
-                        <span id="detailSize" class="text-white font-bold"></span>
+                        <span id="detailSize" class="text-slate-800 font-bold"></span>
                     </div>
                 </div>
 
-                <p id="detailDesc" class="text-slate-300 text-xs leading-relaxed font-semibold"></p>
+                <p id="detailDesc" class="text-slate-600 text-xs leading-relaxed font-semibold"></p>
 
                 <!-- Actions / Simulators -->
                 <div class="flex flex-wrap gap-3 pt-2">
@@ -334,43 +600,56 @@
                     <button onclick="simulateBrochure()" class="flex-grow py-2.5 rounded-xl bg-brand-blue/10 hover:bg-brand-blue/20 border border-brand-blue/20 text-brand-teal text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer">
                         📄 Katalog İndir
                     </button>
-                    <button id="detailDeleteBtn" class="py-2.5 px-4 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-black uppercase tracking-wider transition-all cursor-pointer">
-                        🗑️ İlanı Sil
+                    <button id="detailDeleteBtn" class="hidden py-2.5 px-4 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-600 text-xs font-black uppercase tracking-wider transition-all cursor-pointer">
+                        🗑️ İlanı Sil (Admin)
                     </button>
                 </div>
 
                 <!-- Schedule Viewing Form -->
-                <div class="border-t border-brand-teal/10 pt-4 mt-2">
-                    <h3 class="text-xs font-black text-white uppercase tracking-wider mb-3">Danışmandan Randevu Talep Et</h3>
+                <div class="border-t border-slate-100 pt-4 mt-2">
+                    <h3 class="text-xs font-black text-slate-800 uppercase tracking-wider mb-3">Danışmandan Randevu Talep Et</h3>
                     
                     <!-- Appointment status box -->
-                    <div id="appointmentStatus" class="hidden p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold mb-3"></div>
+                    <div id="appointmentStatus" class="hidden p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs font-bold mb-3"></div>
 
-                    <form id="appointmentForm" onsubmit="bookAppointment(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <input type="date" id="appointmentDate" required class="py-2 px-3 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-xs text-white focus:outline-none focus:border-brand-teal transition-all" />
-                        <select id="appointmentTime" class="py-2 px-3 rounded-xl bg-brand-bg/80 border border-brand-teal/10 text-xs text-brand-teal focus:outline-none focus:border-brand-teal transition-all cursor-pointer">
+                    <!-- Authenticated Form -->
+                    <form id="appointmentForm" onsubmit="bookAppointment(event)" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <input type="date" id="appointmentDate" required class="py-2 px-3 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 focus:outline-none focus:border-brand-teal transition-all" />
+                        <select id="appointmentTime" class="py-2 px-3 rounded-xl bg-white border border-slate-200 text-xs text-brand-teal focus:outline-none focus:border-brand-teal transition-all cursor-pointer">
                             <option value="10:00">10:00</option>
                             <option value="12:00">12:00</option>
                             <option value="14:00">14:00</option>
                             <option value="16:00">16:00</option>
                         </select>
-                        <button type="submit" class="py-2 rounded-xl bg-brand-teal text-slate-900 text-xs font-black uppercase tracking-wider shadow-md hover:opacity-95 transition-all cursor-pointer">Randevu Al</button>
+                        <button type="submit" class="py-2 rounded-xl bg-brand-teal text-white text-xs font-black uppercase tracking-wider shadow-md hover:opacity-95 transition-all cursor-pointer">Randevu Al</button>
                     </form>
+
+                    <!-- Unauthenticated alert -->
+                    <div id="appointmentAuthWarning" class="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/25 text-amber-800 text-xs font-bold flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <span>⚠️ Randevu talep edebilmek için üye girişi yapmanız gerekmektedir.</span>
+                        <button onclick="closeDetailModal(); openAuthModal();" class="px-4 py-1.5 rounded-lg bg-brand-teal hover:opacity-90 text-white font-black uppercase text-[10px] tracking-wider cursor-pointer shadow-sm w-fit self-end sm:self-auto">Giriş Yap</button>
+                    </div>
                 </div>
             </div>
 
         </div>
     </div>
 
-    <!-- Virtual Tour Mockup Overlay -->
-    <div id="virtualTourOverlay" class="fixed inset-0 z-50 bg-black/90 hidden items-center justify-center p-4">
-        <div class="w-full max-w-3xl aspect-video glass-panel rounded-3xl p-2 relative overflow-hidden flex flex-col justify-center items-center text-center">
+    <!-- ================= VIRTUAL TOUR OVERLAY ================= -->
+    <div id="virtualTourOverlay" class="fixed inset-0 z-50 bg-black/95 hidden items-center justify-center p-4">
+        <div class="w-full max-w-4xl aspect-video glass-panel rounded-3xl p-1 relative overflow-hidden flex flex-col justify-center items-center text-center">
+            <!-- Close btn -->
             <button onclick="closeVirtualTour()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-all text-xs font-black bg-slate-900/80 py-1.5 px-3 rounded-xl border border-brand-teal/15 cursor-pointer z-50">Çıkış X</button>
-            <div id="virtualSpinner" class="flex flex-col items-center">
+            
+            <!-- Virtual Tour Iframe (For Matterport / YouTube 360, etc.) -->
+            <iframe id="virtualIframe" class="hidden w-full h-full border-0 rounded-2xl bg-black" src="" allowfullscreen allow="xr-spatial-tracking"></iframe>
+
+            <!-- Fallback Mock Rotating Panorama Container -->
+            <div id="virtualSpinner" class="hidden flex flex-col items-center">
                 <div class="w-12 h-12 rounded-full border-4 border-brand-teal border-t-transparent animate-spin mb-3"></div>
                 <p class="text-xs text-brand-teal font-black uppercase tracking-widest">3D sanal tur motoru yükleniyor...</p>
             </div>
-            <!-- Simulated panorama frame -->
+            
             <div id="virtualView" class="hidden w-full h-full relative rounded-2xl overflow-hidden bg-cover bg-center transition-all duration-1000 scale-105" style="background-image: url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1200')">
                 <div class="absolute inset-0 bg-black/10"></div>
                 <!-- Controls overlay -->
@@ -380,8 +659,43 @@
                     <span class="cursor-pointer hover:text-white" onclick="rotateTour(30)">SAĞA DÖN ▶</span>
                 </div>
                 <div class="absolute top-6 left-6 py-1.5 px-3 rounded-xl bg-slate-950/80 border border-brand-teal/25 text-[10px] font-black uppercase tracking-wider text-white">
-                    3D Sanal Görünüm Modu
+                    3D Sanal Görünüm Modu (Simülatör)
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= ADMIN APPOINTMENTS DASHBOARD MODAL ================= -->
+    <div id="appointmentsModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-4xl rounded-3xl p-6 sm:p-8 shadow-2xl border border-brand-teal/25 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 class="text-xl font-black text-slate-900">📥 Randevu Talepleri Yönetim Paneli</h2>
+                    <span class="text-[10px] uppercase font-bold text-brand-teal">Müşterilerin gönderdiği güncel talepler</span>
+                </div>
+                <button onclick="closeAppointmentsModal()" class="text-slate-400 hover:text-slate-800 transition-colors font-bold text-sm cursor-pointer">X Kapat</button>
+            </div>
+
+            <!-- Appointments List Table -->
+            <div class="overflow-x-auto rounded-2xl border border-slate-200">
+                <table class="w-full text-xs font-semibold text-left text-slate-600 border-collapse bg-white">
+                    <thead class="bg-slate-50 text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200">
+                        <tr>
+                            <th class="p-4">İlgili İlan</th>
+                            <th class="p-4">Müşteri</th>
+                            <th class="p-4">E-Posta</th>
+                            <th class="p-4">Tarih / Saat</th>
+                            <th class="p-4 text-center">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody id="appointmentsTableBody" class="divide-y divide-slate-100">
+                        <!-- Loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="appointmentsEmptyState" class="hidden p-12 text-center text-slate-500 font-bold">
+                Henüz kayıtlı bir randevu talebi bulunmuyor.
             </div>
         </div>
     </div>
@@ -390,11 +704,13 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const queryApiUrl = urlParams.get('apiUrl');
+        
+        // Define API base url cleanly based on environment
         const API_BASE = queryApiUrl 
             ? queryApiUrl 
-            : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-                ? 'http://localhost:5003'
-                : 'https://rootwebcore-backend.onrender.com');
+            : (window.location.protocol === 'file:' 
+                ? 'https://rootwebcore-backend.onrender.com' 
+                : '');
 
         let listings = [];
         let map;
@@ -402,6 +718,54 @@
         let filterOnlyFavs = false;
         let selectedListingId = null;
         let currentRotation = 0;
+        let currentUser = null;
+
+        // Init App States
+        function initApp() {
+            // Check auth session
+            const userStr = localStorage.getItem('apex_user');
+            if (userStr) {
+                try {
+                    currentUser = JSON.parse(userStr);
+                    updateAuthUI();
+                } catch (e) {
+                    localStorage.removeItem('apex_user');
+                }
+            }
+        }
+
+        // Switch SPA views
+        function switchView(viewName) {
+            const homeView = document.getElementById('view-home');
+            const exploreView = document.getElementById('view-explore');
+            const navHome = document.getElementById('nav-home');
+            const navExplore = document.getElementById('nav-explore');
+
+            if (viewName === 'home') {
+                homeView.classList.remove('hidden');
+                exploreView.classList.add('hidden');
+                
+                navHome.classList.add('text-brand-teal', 'border-brand-teal');
+                navHome.classList.remove('text-slate-600', 'border-transparent');
+                
+                navExplore.classList.remove('text-brand-teal', 'border-brand-teal');
+                navExplore.classList.add('text-slate-600', 'border-transparent');
+            } else {
+                homeView.classList.add('hidden');
+                exploreView.classList.remove('hidden');
+                
+                navExplore.classList.add('text-brand-teal', 'border-brand-teal');
+                navExplore.classList.remove('text-slate-600', 'border-transparent');
+                
+                navHome.classList.remove('text-brand-teal', 'border-brand-teal');
+                navHome.classList.add('text-slate-600', 'border-transparent');
+                
+                // Re-invalidate map size when showing explore tab
+                setTimeout(() => {
+                    if (map) map.invalidateSize();
+                }, 200);
+            }
+        }
 
         // Fetch data from backend api
         async function fetchListings() {
@@ -411,7 +775,6 @@
                 
                 // Update live statistics dashboard
                 calculateStats();
-                
                 applyFilters();
             } catch (err) {
                 console.error('Error fetching listings:', err);
@@ -421,14 +784,7 @@
         // Calculate statistics
         function calculateStats() {
             if (listings.length === 0) return;
-            
-            const total = listings.length;
-            const avgSize = Math.round(listings.reduce((sum, item) => sum + (item.size || 0), 0) / total);
-            const avgPrice = Math.round(listings.reduce((sum, item) => sum + (item.price || 0), 0) / total);
-
-            document.getElementById('statTotalListings').innerText = total;
-            document.getElementById('statAvgSize').innerText = `${avgSize} m²`;
-            document.getElementById('statAvgPrice').innerText = `${avgPrice.toLocaleString()} TRY`;
+            document.getElementById('statTotalListings').innerText = listings.length;
             document.getElementById('favFilterCount').innerText = getFavorites().length;
         }
 
@@ -437,9 +793,9 @@
             // Center map on Istanbul
             map = L.map('map').setView([41.0151, 28.9795], 11);
             
-            // Dark map tile styling
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
+            // Light Voyager map styling
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
             }).addTo(map);
 
             markersGroup = L.layerGroup().addTo(map);
@@ -447,18 +803,22 @@
 
         // Draw Markers on Map
         function drawMarkers(filtered) {
+            if (!markersGroup) return;
             markersGroup.clearLayers();
             
             filtered.forEach(item => {
                 if (item.lat && item.lng) {
                     const marker = L.marker([item.lat, item.lng]);
+                    const statusText = item.status === 'Rent' ? 'Kiralık' : 'Satılık';
+                    const priceSuffix = item.status === 'Rent' ? 'TRY / Ay' : 'TRY';
                     
                     const popupContent = `
-                        <div class="text-slate-950 p-2 font-display min-w-[200px]">
+                        <div class="text-slate-900 p-2 font-display min-w-[200px]">
                             <img src="${item.imageUrl}" class="w-full h-20 object-cover rounded-lg mb-2" />
                             <h4 class="font-bold text-xs line-clamp-1">${item.title}</h4>
-                            <span class="text-brand-blue font-black text-xs block mt-1">${item.price.toLocaleString()} TRY</span>
-                            <span class="text-[9px] uppercase font-bold text-slate-400 block">${item.location}</span>
+                            <span class="text-brand-teal font-bold text-[10px] block mt-0.5">${statusText}</span>
+                            <span class="text-brand-orange font-black text-xs block mt-0.5">${item.price.toLocaleString()} ${priceSuffix}</span>
+                            <span class="text-[9px] uppercase font-bold text-slate-500 block mt-0.5">${item.location}</span>
                             <button onclick="openDetailModal(${item.id})" class="w-full py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-black uppercase tracking-wider mt-2 cursor-pointer">Detayları Aç</button>
                         </div>
                     `;
@@ -504,15 +864,16 @@
             applyFilters();
         }
 
+        // Filter favorites toggle
         function toggleFavFilter() {
             filterOnlyFavs = !filterOnlyFavs;
             const btn = document.getElementById('favFilterBtn');
             if (filterOnlyFavs) {
-                btn.classList.add('bg-brand-teal', 'text-slate-900');
-                btn.classList.remove('bg-brand-bg/40', 'text-brand-teal');
+                btn.classList.add('bg-brand-teal', 'text-white');
+                btn.classList.remove('bg-white', 'text-brand-teal');
             } else {
-                btn.classList.remove('bg-brand-teal', 'text-slate-900');
-                btn.classList.add('bg-brand-bg/40', 'text-brand-teal');
+                btn.classList.remove('bg-brand-teal', 'text-white');
+                btn.classList.add('bg-white', 'text-brand-teal');
             }
             applyFilters();
         }
@@ -524,8 +885,8 @@
 
             if (itemsToRender.length === 0) {
                 container.innerHTML = `
-                    <div class="glass-panel rounded-3xl p-12 text-center text-brand-text-secondary font-medium">
-                        Arama kriterlerine uygun ilan bulunamadı.
+                    <div class="glass-panel rounded-3xl p-12 text-center text-slate-500 font-medium">
+                        Kriterlere uygun kiralık veya satılık ilan bulunamadı.
                     </div>
                 `;
                 return;
@@ -535,21 +896,26 @@
 
             itemsToRender.forEach(item => {
                 const isFav = favs.includes(item.id);
+                const isRent = item.status === 'Rent';
+                const statusBadgeBg = isRent ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-amber-100 text-amber-700 border-amber-200';
+                const statusText = isRent ? 'Kiralık' : 'Satılık';
+                const priceLabel = isRent ? `${item.price.toLocaleString()} TRY / Ay` : `${item.price.toLocaleString()} TRY`;
+
                 const card = document.createElement('div');
-                card.className = "glass-panel rounded-3xl overflow-hidden shadow-xl border border-brand-teal/10 p-5 flex flex-col sm:flex-row gap-5 transition-all duration-300 hover:border-brand-teal/30 hover:shadow-brand-teal/5 relative group cursor-pointer";
+                card.className = "glass-panel rounded-3xl overflow-hidden shadow-sm hover:shadow-md border border-slate-100 p-5 flex flex-col sm:flex-row gap-5 transition-all duration-300 hover:border-brand-teal/30 relative group cursor-pointer bg-white";
                 card.onclick = () => openDetailModal(item.id);
                 
                 card.innerHTML = `
-                    <div class="w-full sm:w-48 h-36 rounded-2xl overflow-hidden bg-brand-bg-secondary flex-shrink-0 relative">
+                    <div class="w-full sm:w-48 h-36 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0 relative">
                         <img src="${item.imageUrl}" alt="${item.title}" class="w-full h-full object-cover" />
-                        <span class="absolute top-2.5 left-2.5 px-3 py-1 rounded-xl bg-slate-900/80 text-brand-teal text-[9px] font-black uppercase tracking-wider">
-                            ${item.type}
+                        <span class="absolute top-2.5 left-2.5 px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider border ${statusBadgeBg}">
+                            ${statusText}
                         </span>
                         
                         <!-- Favorite Heart button -->
                         <button 
                             onclick="toggleFavorite(event, ${item.id})"
-                            class="absolute top-2.5 right-2.5 w-8 h-8 rounded-xl bg-slate-900/80 hover:bg-slate-900 border border-brand-teal/10 hover:border-brand-teal/35 flex items-center justify-center text-sm transition-transform active:scale-90 cursor-pointer"
+                            class="absolute top-2.5 right-2.5 w-8 h-8 rounded-xl bg-white/90 hover:bg-white border border-slate-200 flex items-center justify-center text-sm transition-transform active:scale-90 cursor-pointer shadow-sm"
                         >
                             ${isFav ? '❤️' : '🤍'}
                         </button>
@@ -557,20 +923,21 @@
                     <div class="flex-grow flex flex-col justify-between">
                         <div>
                             <div class="flex justify-between items-start gap-2">
-                                <h3 class="text-base sm:text-lg font-bold text-white group-hover:text-brand-teal transition-colors" onclick="event.stopPropagation(); focusOnMap(${item.lat}, ${item.lng}, '${item.title}')">
+                                <h3 class="text-base sm:text-lg font-bold text-slate-800 group-hover:text-brand-teal transition-colors" onclick="event.stopPropagation(); focusOnMap(${item.lat}, ${item.lng}, '${item.title}')">
                                     ${item.title}
                                 </h3>
                                 <span class="text-brand-orange font-black text-base whitespace-nowrap">
-                                    ${item.price.toLocaleString()} TRY
+                                    ${priceLabel}
                                 </span>
                             </div>
                             <span class="text-[10px] text-slate-400 font-bold block mt-1">${item.location}</span>
-                            <p class="text-xs text-slate-300 font-semibold line-clamp-2 mt-2 leading-relaxed">${item.description}</p>
+                            <p class="text-xs text-slate-500 font-semibold line-clamp-2 mt-2 leading-relaxed">${item.description}</p>
                         </div>
                         <div class="flex flex-wrap gap-4 items-center mt-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                             <span>📐 ${item.size} m²</span>
                             <span>🛌 ${item.bedrooms} Oda</span>
-                            <span class="text-brand-teal ml-auto group-hover:translate-x-1 transition-transform">Detayları Gör ➔</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-500 text-[9px] font-bold">${item.type}</span>
+                            <span class="text-brand-teal ml-auto group-hover:translate-x-1 transition-transform font-bold">Detayları Gör ➔</span>
                         </div>
                     </div>
                 `;
@@ -581,8 +948,13 @@
         // Apply filters
         function applyFilters() {
             const query = document.getElementById('searchQuery').value.toLowerCase();
+            const status = document.getElementById('filterStatus').value;
             const type = document.getElementById('filterType').value;
-            const priceRange = document.getElementById('filterPrice').value;
+            
+            const minPrice = document.getElementById('filterMinPrice').value;
+            const maxPrice = document.getElementById('filterMaxPrice').value;
+            const minBedrooms = document.getElementById('filterBedrooms').value;
+            const minSize = document.getElementById('filterMinSize').value;
 
             let filtered = listings;
 
@@ -595,20 +967,34 @@
                 );
             }
 
+            // Filter by Rent/Sale status
+            if (status !== 'All') {
+                filtered = filtered.filter(item => item.status === status);
+            }
+
             // Filter by type
             if (type !== 'All') {
                 filtered = filtered.filter(item => item.type === type);
             }
 
-            // Filter by price range
-            if (priceRange !== 'All') {
-                if (priceRange === '0-15') {
-                    filtered = filtered.filter(item => item.price < 15000000);
-                } else if (priceRange === '15-30') {
-                    filtered = filtered.filter(item => item.price >= 15000000 && item.price <= 30000000);
-                } else if (priceRange === '30+') {
-                    filtered = filtered.filter(item => item.price > 30000000);
-                }
+            // Filter by custom Min Price
+            if (minPrice !== '') {
+                filtered = filtered.filter(item => item.price >= Number(minPrice));
+            }
+
+            // Filter by custom Max Price
+            if (maxPrice !== '') {
+                filtered = filtered.filter(item => item.price <= Number(maxPrice));
+            }
+
+            // Filter by custom Min Bedrooms
+            if (minBedrooms !== 'All') {
+                filtered = filtered.filter(item => item.bedrooms >= Number(minBedrooms));
+            }
+
+            // Filter by custom Min Size (m²)
+            if (minSize !== '') {
+                filtered = filtered.filter(item => item.size >= Number(minSize));
             }
 
             // Filter by favorites only
@@ -622,50 +1008,471 @@
             drawMarkers(filtered);
         }
 
-        // Add Listing Modal functions
-        function openAddModal() {
-            document.getElementById('addModal').classList.remove('hidden');
-            document.getElementById('addModal').classList.add('flex');
+        // --- AUTH SYSTEM FUNCTIONS ---
+
+        function openAuthModal() {
+            document.getElementById('authModal').classList.remove('hidden');
+            document.getElementById('authModal').classList.add('flex');
+            switchAuthTab('login');
         }
 
-        // Close add listing modal
-        function closeAddModal() {
-            document.getElementById('addModal').classList.add('hidden');
-            document.getElementById('addModal').classList.remove('flex');
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.add('hidden');
+            document.getElementById('authModal').classList.remove('flex');
         }
 
-        // Advanced Detail Modal functions
+        function switchAuthTab(tab) {
+            const loginTab = document.getElementById('tab-login');
+            const registerTab = document.getElementById('tab-register');
+            const loginForm = document.getElementById('form-login');
+            const registerForm = document.getElementById('form-register');
+
+            if (tab === 'login') {
+                loginTab.className = "flex-grow pb-3 border-b-2 border-brand-teal text-brand-teal";
+                registerTab.className = "flex-grow pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-800";
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+            } else {
+                registerTab.className = "flex-grow pb-3 border-b-2 border-brand-teal text-brand-teal";
+                loginTab.className = "flex-grow pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-800";
+                registerForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+            }
+        }
+
+        function fillDemoLogin(username, password) {
+            document.getElementById('loginUsername').value = username;
+            document.getElementById('loginPassword').value = password;
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const usernameInput = document.getElementById('loginUsername').value;
+            const passwordInput = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+
+            errorDiv.classList.add('hidden');
+
+            try {
+                const res = await fetch(`${API_BASE}/api/apex/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: usernameInput, password: passwordInput })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    errorDiv.innerText = data.error || 'Giriş yapılamadı.';
+                    errorDiv.classList.remove('hidden');
+                    return;
+                }
+
+                // Successful login
+                currentUser = data;
+                localStorage.setItem('apex_user', JSON.stringify(currentUser));
+                updateAuthUI();
+                closeAuthModal();
+                alert(`Hoş geldiniz, ${currentUser.name}!`);
+            } catch (err) {
+                console.error(err);
+                errorDiv.innerText = 'Sunucuyla bağlantı kurulamadı.';
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('registerName').value;
+            const usernameInput = document.getElementById('registerUsername').value;
+            const emailInput = document.getElementById('registerEmail').value;
+            const passwordInput = document.getElementById('registerPassword').value;
+            const errorDiv = document.getElementById('registerError');
+
+            errorDiv.classList.add('hidden');
+
+            try {
+                const res = await fetch(`${API_BASE}/api/apex/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: nameInput,
+                        username: usernameInput,
+                        email: emailInput,
+                        password: passwordInput
+                    })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    errorDiv.innerText = data.error || 'Kayıt başarısız.';
+                    errorDiv.classList.remove('hidden');
+                    return;
+                }
+
+                // Auto login on successful register
+                currentUser = data;
+                localStorage.setItem('apex_user', JSON.stringify(currentUser));
+                updateAuthUI();
+                closeAuthModal();
+                alert(`Hesabınız başarıyla oluşturuldu! Hoş geldiniz, ${currentUser.name}!`);
+            } catch (err) {
+                console.error(err);
+                errorDiv.innerText = 'Sunucuyla bağlantı kurulamadı.';
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        // Logout
+        function logout() {
+            if (!confirm('Çıkış yapmak istediğinize emin misiniz?')) return;
+            currentUser = null;
+            localStorage.removeItem('apex_user');
+            updateAuthUI();
+            closeDetailModal();
+            fetchListings();
+        }
+
+        function updateAuthUI() {
+            const authContainer = document.getElementById('authStateContainer');
+            const adminAddBtn = document.getElementById('adminAddListingBtn');
+            const adminAppsBtn = document.getElementById('adminAppointmentsBtn');
+            const detailDeleteBtn = document.getElementById('detailDeleteBtn');
+
+            if (currentUser) {
+                const roleBadge = currentUser.role === 'admin' 
+                    ? '<span class="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-brand-orange/20 text-brand-orange border border-brand-orange/30">ADMIN</span>' 
+                    : '<span class="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-brand-teal/20 text-brand-teal border border-brand-teal/30">MÜŞTERİ</span>';
+
+                authContainer.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="text-right hidden sm:block">
+                            <span class="block text-xs font-black text-slate-800">${currentUser.name}</span>
+                            <span class="block text-[9px] text-slate-400 font-bold -mt-0.5">${currentUser.email} ${roleBadge}</span>
+                        </div>
+                        <button 
+                            onclick="logout()" 
+                            class="px-4 py-2 rounded-xl border border-red-500/30 hover:border-red-500 hover:bg-red-500/10 text-red-500 transition-all text-xs font-bold uppercase tracking-wider cursor-pointer"
+                        >
+                            Çıkış
+                        </button>
+                    </div>
+                `;
+
+                if (currentUser.role === 'admin') {
+                    adminAddBtn.classList.remove('hidden');
+                    adminAppsBtn.classList.remove('hidden');
+                    if (detailDeleteBtn) detailDeleteBtn.classList.remove('hidden');
+                } else {
+                    adminAddBtn.classList.add('hidden');
+                    adminAppsBtn.classList.add('hidden');
+                    if (detailDeleteBtn) detailDeleteBtn.classList.add('hidden');
+                }
+            } else {
+                authContainer.innerHTML = `
+                    <button 
+                        onclick="openAuthModal()" 
+                        class="px-4 py-2.5 rounded-xl border border-brand-teal/30 hover:border-brand-teal hover:bg-brand-teal/10 transition-all text-xs font-bold uppercase tracking-wider text-brand-teal cursor-pointer"
+                    >
+                        Giriş Yap / Üye Ol
+                    </button>
+                `;
+                adminAddBtn.classList.add('hidden');
+                adminAppsBtn.classList.add('hidden');
+                if (detailDeleteBtn) detailDeleteBtn.classList.add('hidden');
+            }
+        }
+
+        // --- APPOINTMENTS (RANDevu) FRONTEND FLOW ---
+
+        async function bookAppointment(e) {
+            e.preventDefault();
+            if (!currentUser) {
+                alert('Randevu talep edebilmek için giriş yapmalısınız.');
+                return;
+            }
+
+            const item = listings.find(l => l.id === selectedListingId);
+            if (!item) return;
+
+            const date = document.getElementById('appointmentDate').value;
+            const time = document.getElementById('appointmentTime').value;
+            if (!date) return;
+
+            const payload = {
+                listingId: selectedListingId,
+                listingTitle: item.title,
+                userName: currentUser.name,
+                userEmail: currentUser.email,
+                date,
+                time
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/api/apex/appointments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    const bookingString = `${date} saat ${time}`;
+                    localStorage.setItem(`apex_booked_${selectedListingId}`, bookingString);
+
+                    // Update UI status
+                    const statusBox = document.getElementById('appointmentStatus');
+                    statusBox.innerText = `✅ Randevunuz Rezerve Edildi: ${bookingString}. E-posta adresiniz (${currentUser.email}) üzerinden danışmanımız sizinle iletişime geçecektir.`;
+                    statusBox.classList.remove('hidden');
+                    document.getElementById('appointmentForm').classList.add('hidden');
+                    alert('Randevu talebiniz başarıyla alındı.');
+                } else {
+                    alert('Randevu oluşturulamadı.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('İletişim hatası.');
+            }
+        }
+
+        // --- ADMIN APPOINTMENTS MANAGER ACTIONS ---
+
+        function openAppointmentsModal() {
+            if (!currentUser || currentUser.role !== 'admin') return;
+            document.getElementById('appointmentsModal').classList.remove('hidden');
+            document.getElementById('appointmentsModal').classList.add('flex');
+            fetchAppointments();
+        }
+
+        function closeAppointmentsModal() {
+            document.getElementById('appointmentsModal').classList.add('hidden');
+            document.getElementById('appointmentsModal').classList.remove('flex');
+        }
+
+        async function fetchAppointments() {
+            try {
+                const res = await fetch(`${API_BASE}/api/apex/appointments`, {
+                    headers: { 'x-user-role': currentUser.role }
+                });
+                const appointments = await res.json();
+                renderAppointments(appointments);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderAppointments(apps) {
+            const tbody = document.getElementById('appointmentsTableBody');
+            const emptyState = document.getElementById('appointmentsEmptyState');
+            tbody.innerHTML = '';
+
+            if (apps.length === 0) {
+                tbody.parentElement.parentElement.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            tbody.parentElement.parentElement.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            apps.forEach(app => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/50 transition-colors";
+                
+                const mailSubject = encodeURIComponent(`Apex Real Estate - Randevu Talebi Yanıtı`);
+                const mailBody = encodeURIComponent(`Merhaba ${app.userName},\n\n${app.listingTitle} için ${app.date} tarihinde saat ${app.time} için talep ettiğiniz randevu onaylanmıştır.\n\nSorularınız varsa bu e-posta üzerinden yanıtlayabilirsiniz.\n\nSaygılarımızla,\nApex Real Estate Danışmanlık Ekibi`);
+                const mailtoUrl = `mailto:${app.userEmail}?subject=${mailSubject}&body=${mailBody}`;
+
+                tr.innerHTML = `
+                    <td class="p-4 font-bold text-slate-800 max-w-[200px] truncate">${app.listingTitle}</td>
+                    <td class="p-4 text-slate-700">${app.userName}</td>
+                    <td class="p-4 text-slate-500">${app.userEmail}</td>
+                    <td class="p-4"><span class="px-2 py-1 rounded-lg bg-brand-teal/10 text-brand-teal font-bold">${app.date} / ${app.time}</span></td>
+                    <td class="p-4 flex justify-center gap-2">
+                        <a 
+                            href="${mailtoUrl}"
+                            class="px-3 py-1.5 rounded-lg bg-brand-teal hover:opacity-90 text-white font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 cursor-pointer"
+                        >
+                            ✉️ E-posta At
+                        </a>
+                        <button 
+                            onclick="archiveAppointment(${app.id})"
+                            class="px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider cursor-pointer"
+                        >
+                            Arşivle
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function archiveAppointment(id) {
+            if (!confirm('Bu randevu talebini arşivlemek (silmek) istediğinize emin misiniz?')) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/apex/appointments/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'x-user-role': currentUser.role }
+                });
+                if (res.ok) {
+                    fetchAppointments();
+                } else {
+                    alert('Talep arşivlenemedi.');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // --- ADD LISTING SYSTEM ---
+
+        // Submit new listing
+        async function submitListing(e) {
+            e.preventDefault();
+            if (!currentUser || currentUser.role !== 'admin') {
+                alert('İlan ekleme yetkiniz bulunmamaktadır.');
+                return;
+            }
+            
+            const textareaValue = document.getElementById('addImagesUrls').value.trim();
+            const imagesList = textareaValue 
+                ? textareaValue.split('\n').map(url => url.trim()).filter(url => url.length > 0) 
+                : [];
+
+            const payload = {
+                title: document.getElementById('addTitle').value,
+                description: document.getElementById('addDescription').value,
+                price: Number(document.getElementById('addPrice').value),
+                type: document.getElementById('addType').value,
+                status: document.getElementById('addStatus').value,
+                location: document.getElementById('addLocation').value,
+                lat: Number(document.getElementById('addLat').value) || 41.0151,
+                lng: Number(document.getElementById('addLng').value) || 28.9795,
+                bedrooms: Number(document.getElementById('addBedrooms').value) || 2,
+                size: Number(document.getElementById('addSize').value) || 100,
+                images: imagesList,
+                virtualTourUrl: document.getElementById('addVirtualTourUrl').value.trim()
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/api/apex/listings`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-user-role': currentUser.role
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await res.json();
+
+                if (res.ok) {
+                    closeAddModal();
+                    e.target.reset();
+                    fetchListings();
+                    alert('Yeni ilan veritabanına başarıyla eklendi.');
+                } else {
+                    alert(data.error || 'İlan eklenemedi.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('İletişim hatası.');
+            }
+        }
+
+        // --- DETAIL MODAL & PHOTO GALLERY ---
+
         function openDetailModal(id) {
             const item = listings.find(l => l.id === id);
             if (!item) return;
 
             selectedListingId = id;
-            document.getElementById('detailImg').src = item.imageUrl;
+            
+            const images = item.images && Array.isArray(item.images) && item.images.length > 0
+                ? item.images
+                : [item.imageUrl || 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=800'];
+
+            document.getElementById('detailImg').src = images[0];
             document.getElementById('detailBadge').innerText = item.type;
+            
+            const isRent = item.status === 'Rent';
+            const detailStatusBadge = document.getElementById('detailStatusBadge');
+            detailStatusBadge.innerText = isRent ? 'Kiralık' : 'Satılık';
+            if (isRent) {
+                detailStatusBadge.className = "absolute top-3 right-3 px-3 py-1 rounded-xl text-white text-[10px] font-black uppercase tracking-wider bg-emerald-600 border border-emerald-500/30";
+                document.getElementById('detailPrice').innerText = `${item.price.toLocaleString()} TRY / Ay`;
+            } else {
+                detailStatusBadge.className = "absolute top-3 right-3 px-3 py-1 rounded-xl text-white text-[10px] font-black uppercase tracking-wider bg-amber-600 border border-amber-500/30";
+                document.getElementById('detailPrice').innerText = `${item.price.toLocaleString()} TRY`;
+            }
+
             document.getElementById('detailTitle').innerText = item.title;
-            document.getElementById('detailPrice').innerText = `${item.price.toLocaleString()} TRY`;
             document.getElementById('detailLocation').innerText = item.location;
             document.getElementById('detailBedrooms').innerText = `${item.bedrooms} Odalı`;
             document.getElementById('detailSize').innerText = `${item.size} m²`;
             document.getElementById('detailDesc').innerText = item.description;
 
-            // Reset appointment status
-            const booked = localStorage.getItem(`apex_booked_${id}`);
+            const thumbsContainer = document.getElementById('detailThumbsContainer');
+            thumbsContainer.innerHTML = '';
+            
+            const roomLabels = ['Dış Cephe', 'Salon', 'Yatak Odası', 'Mutfak', 'Banyo', 'Bahçe', 'Teras'];
+
+            images.forEach((imgUrl, idx) => {
+                const label = roomLabels[idx] || `Oda ${idx + 1}`;
+                const thumb = document.createElement('div');
+                thumb.className = `w-20 h-16 rounded-xl overflow-hidden relative cursor-pointer border-2 transition-all flex-shrink-0 thumb-item ${
+                    idx === 0 ? 'border-brand-teal scale-105 shadow-sm' : 'border-transparent opacity-70 hover:opacity-100'
+                }`;
+                
+                thumb.onclick = () => {
+                    document.getElementById('detailImg').src = imgUrl;
+                    
+                    document.querySelectorAll('.thumb-item').forEach(el => {
+                        el.classList.remove('border-brand-teal', 'scale-105', 'shadow-sm');
+                        el.classList.add('border-transparent', 'opacity-70');
+                    });
+                    
+                    thumb.classList.add('border-brand-teal', 'scale-105', 'shadow-sm');
+                    thumb.classList.remove('border-transparent', 'opacity-70');
+                };
+
+                thumb.innerHTML = `
+                    <img src="${imgUrl}" class="w-full h-full object-cover" />
+                    <span class="absolute bottom-0 inset-x-0 bg-slate-900/70 text-[8px] font-bold text-center py-0.5 text-white truncate px-1">${label}</span>
+                `;
+                thumbsContainer.appendChild(thumb);
+            });
+
+            // Randevu Yetkilendirme Kontrolü
             const statusBox = document.getElementById('appointmentStatus');
             const form = document.getElementById('appointmentForm');
-            if (booked) {
-                statusBox.innerText = `✅ Randevunuz Rezerve Edildi: ${booked}`;
-                statusBox.classList.remove('hidden');
-                form.classList.add('hidden');
+            const authWarning = document.getElementById('appointmentAuthWarning');
+            const booked = localStorage.getItem(`apex_booked_${id}`);
+
+            if (currentUser) {
+                authWarning.classList.add('hidden');
+                if (booked) {
+                    statusBox.innerText = `✅ Randevunuz Rezerve Edildi: ${booked}. İletişim e-posta: ${currentUser.email}`;
+                    statusBox.classList.remove('hidden');
+                    form.classList.add('hidden');
+                } else {
+                    statusBox.classList.add('hidden');
+                    form.classList.remove('hidden');
+                }
             } else {
+                form.classList.add('hidden');
                 statusBox.classList.add('hidden');
-                form.classList.remove('hidden');
+                authWarning.classList.remove('hidden');
             }
 
-            // Set Delete button click
-            document.getElementById('detailDeleteBtn').onclick = () => deleteListing(id);
+            const deleteBtn = document.getElementById('detailDeleteBtn');
+            if (currentUser && currentUser.role === 'admin') {
+                deleteBtn.classList.remove('hidden');
+                deleteBtn.onclick = () => deleteListing(id);
+            } else {
+                deleteBtn.classList.add('hidden');
+            }
 
-            // Display modal
             document.getElementById('detailModal').classList.remove('hidden');
             document.getElementById('detailModal').classList.add('flex');
         }
@@ -676,20 +1483,30 @@
             selectedListingId = null;
         }
 
-        // Delete listing from database
+        // Delete listing
         async function deleteListing(id) {
-            if (!confirm('Bu ilanı silmek istediğinize emin misiniz? (Bilgiler .dat dosyasından kalıcı olarak silinecektir)')) return;
+            if (!currentUser || currentUser.role !== 'admin') {
+                alert('Bu işlem için yönetici yetkisi gereklidir.');
+                return;
+            }
+            if (!confirm('Bu ilanı silmek istediğinize emin misiniz? (Bilgiler veritabanından kalıcı olarak silinecektir)')) return;
             
             try {
                 const res = await fetch(`${API_BASE}/api/apex/listings/${id}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: {
+                        'x-user-role': currentUser.role
+                    }
                 });
                 
+                const data = await res.json();
+
                 if (res.ok) {
                     closeDetailModal();
                     fetchListings();
+                    alert('İlan başarıyla silindi.');
                 } else {
-                    alert('İlan silinemedi.');
+                    alert(data.error || 'İlan silinemedi.');
                 }
             } catch (err) {
                 console.error(err);
@@ -697,25 +1514,47 @@
             }
         }
 
-        // Virtual Tour simulation
+        // --- MISC / SIMULATION FUNCTIONS ---
+
+        // Virtual Tour
         function simulateVirtualTour() {
-            document.getElementById('virtualTourOverlay').classList.remove('hidden');
-            document.getElementById('virtualTourOverlay').classList.add('flex');
+            const item = listings.find(l => l.id === selectedListingId);
+            if (!item) return;
+
+            const overlay = document.getElementById('virtualTourOverlay');
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
             
-            document.getElementById('virtualSpinner').classList.remove('hidden');
-            document.getElementById('virtualView').classList.add('hidden');
-            
-            setTimeout(() => {
-                document.getElementById('virtualSpinner').classList.add('hidden');
-                document.getElementById('virtualView').classList.remove('hidden');
-                currentRotation = 0;
-                document.getElementById('virtualView').style.backgroundPosition = '0px center';
-            }, 1200);
+            const iframe = document.getElementById('virtualIframe');
+            const spinner = document.getElementById('virtualSpinner');
+            const mockView = document.getElementById('virtualView');
+
+            if (item.virtualTourUrl && item.virtualTourUrl.trim().length > 0) {
+                iframe.src = item.virtualTourUrl;
+                iframe.classList.remove('hidden');
+                spinner.classList.add('hidden');
+                mockView.classList.add('hidden');
+            } else {
+                iframe.classList.add('hidden');
+                iframe.src = '';
+                spinner.classList.remove('hidden');
+                mockView.classList.add('hidden');
+                
+                setTimeout(() => {
+                    spinner.classList.add('hidden');
+                    mockView.classList.remove('hidden');
+                    currentRotation = 0;
+                    mockView.style.backgroundPosition = '0px center';
+                }, 1200);
+            }
         }
 
         function closeVirtualTour() {
-            document.getElementById('virtualTourOverlay').classList.add('hidden');
-            document.getElementById('virtualTourOverlay').classList.remove('flex');
+            const overlay = document.getElementById('virtualTourOverlay');
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+            const iframe = document.getElementById('virtualIframe');
+            iframe.src = '';
         }
 
         function rotateTour(amount) {
@@ -723,67 +1562,13 @@
             document.getElementById('virtualView').style.backgroundPosition = `${currentRotation}px center`;
         }
 
-        // Simulate Catalog Brochure download
+        // Simulate Brochure
         function simulateBrochure() {
-            alert('📄 Emlak Satış Kataloğu indirme isteği simüle edildi. PDF broşür dosyası hazırlanıyor...');
+            alert('📄 Emlak Satış/Kira Kataloğu indirme isteği simüle edildi. PDF broşür dosyası başarıyla indirildi.');
         }
 
-        // Book viewed appointment
-        function bookAppointment(e) {
-            e.preventDefault();
-            const date = document.getElementById('appointmentDate').value;
-            const time = document.getElementById('appointmentTime').value;
-            if (!date) return;
+        // --- CHAT MESSENGER FLOATING WINDOW ---
 
-            const bookingString = `${date} saat ${time}`;
-            localStorage.setItem(`apex_booked_${selectedListingId}`, bookingString);
-
-            // Update UI status
-            const statusBox = document.getElementById('appointmentStatus');
-            statusBox.innerText = `✅ Randevunuz Rezerve Edildi: ${bookingString}`;
-            statusBox.classList.remove('hidden');
-            document.getElementById('appointmentForm').classList.add('hidden');
-        }
-
-        // Submit new listing
-        async function submitListing(e) {
-            e.preventDefault();
-            
-            const payload = {
-                title: document.getElementById('addTitle').value,
-                description: document.getElementById('addDescription').value,
-                price: Number(document.getElementById('addPrice').value),
-                type: document.getElementById('addType').value,
-                location: document.getElementById('addLocation').value,
-                lat: Number(document.getElementById('addLat').value) || 41.0151,
-                lng: Number(document.getElementById('addLng').value) || 28.9795,
-                bedrooms: Number(document.getElementById('addBedrooms').value) || 2,
-                size: Number(document.getElementById('addSize').value) || 100,
-                imageUrl: document.getElementById('addImageUrl').value || 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=800'
-            };
-
-            try {
-                const res = await fetch(`${API_BASE}/api/apex/listings`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
-                if (res.ok) {
-                    closeAddModal();
-                    // Reset form
-                    e.target.reset();
-                    fetchListings();
-                } else {
-                    alert('İlan eklenemedi.');
-                }
-            } catch (err) {
-                console.error(err);
-                alert('İletişim hatası.');
-            }
-        }
-
-        // Messenger window functions
         function toggleChat() {
             const chat = document.getElementById('chatWindow');
             chat.classList.toggle('hidden');
@@ -811,8 +1596,8 @@
                 const isUser = msg.sender !== 'Sistem' && msg.sender !== 'Agent';
                 bubble.className = `p-3 rounded-2xl max-w-[80%] ${
                     isUser 
-                        ? 'bg-brand-teal text-slate-900 self-end rounded-br-none shadow-md' 
-                        : 'bg-brand-card text-slate-200 self-start rounded-bl-none border border-brand-teal/5'
+                        ? 'bg-brand-teal text-white self-end rounded-br-none shadow-sm' 
+                        : 'bg-slate-100 text-slate-800 self-start rounded-bl-none border border-slate-200/50'
                 }`;
                 bubble.innerHTML = `
                     <span class="block text-[8px] font-black uppercase opacity-70 mb-0.5">${msg.sender}</span>
@@ -826,8 +1611,10 @@
         async function sendMessage(e) {
             e.preventDefault();
             const input = document.getElementById('chatInput');
+            const senderName = currentUser ? currentUser.name : 'Müşteri';
+            
             const payload = {
-                sender: 'Müşteri',
+                sender: senderName,
                 text: input.value
             };
             
@@ -849,6 +1636,7 @@
 
         // App Init Bootstrap
         window.addEventListener('load', () => {
+            initApp();
             initMap();
             fetchListings();
             
